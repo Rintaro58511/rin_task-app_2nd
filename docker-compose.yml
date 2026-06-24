@@ -1,0 +1,16 @@
+services:
+
+  app:
+
+    build:
+      .
+
+    ports:
+      - "5001:5000"
+      - "8001:8000"
+    
+    volumes:
+      - ./app:/usr/src/app
+
+    tty:
+      true
