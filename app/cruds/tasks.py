@@ -2,7 +2,7 @@ from schemas.tasks import TaskSchema, UpdateAndCreateTaskSchema
 
 task_db = []
 
-async def list_task():
+async def fetch_tasks():
     return task_db
 
 async def add_task(task: UpdateAndCreateTaskSchema):
