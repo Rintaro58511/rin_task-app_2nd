@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 from schemas.tasks import UpdateAndCreateTaskSchema, TaskSchema, ResponseSchema
-from cruds.tasks import add_task, fetch_tasks, remove_task, modify_task
+from cruds.tasks import add_task, fetch_tasks, remove_task, modify_task, fetch_task
 
 router = APIRouter()
 
@@ -25,3 +25,8 @@ async def update_task(task_id: int, task: UpdateAndCreateTaskSchema):
     if updated_task is None:
         raise HTTPException(status_code = 404, detail = "指定されたタスクが存在しません")
     return ResponseSchema(message="タスクを更新しました", task = updated_task)
+
+@router.get("/tasks/{task_id}", response_model = TaskSchema)
+async def search_task(task_id: int):
+    task = await fetch_task(task_id)
+    return task
