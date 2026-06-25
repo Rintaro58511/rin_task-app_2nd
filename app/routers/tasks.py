@@ -1,11 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, status
 from schemas.tasks import UpdateAndCreateTaskSchema, TaskSchema, ResponseSchema
-from cruds.tasks import add_task, fetch_tasks
+from cruds.tasks import add_task, fetch_tasks, remove_task
 
 router = APIRouter()
 
 
-@router.post("/tasks", response_model=ResponseSchema)
+@router.post(
+    "/tasks", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
+)
 async def create_task(task: UpdateAndCreateTaskSchema):
     new_task = await add_task(task)
     return ResponseSchema(message="タスク追加ができました", task=new_task)
@@ -15,3 +17,9 @@ async def create_task(task: UpdateAndCreateTaskSchema):
 async def list_task():
     tasks = await fetch_tasks()
     return tasks
+
+
+@router.delete("/tasks/{task_id}", response_model=ResponseSchema)
+async def delete_task(task_id: int):
+    deleted_task = await remove_task(task_id)
+    return ResponseSchema(message="タスクを削除しました", task=deleted_task)
