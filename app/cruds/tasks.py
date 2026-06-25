@@ -25,3 +25,11 @@ async def modify_task(task_id: int, task: TaskSchema):
             return updated_task
     
     return None
+
+async def fetch_task(task_id: int):
+    for index, existing_task in enumerate(task_db):
+
+        if existing_task.task_id == task_id:
+            return task_db[index]
+        
+    return None
