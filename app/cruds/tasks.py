@@ -13,3 +13,7 @@ async def add_task(task: UpdateAndCreateTaskSchema):
                       task_detail=task.task_detail)
     task_db.append(new_task)
     return new_task
+
+async def remove_task(task_id: int):
+    deleted_task = task_db.pop(task_id-1)
+    return deleted_task
