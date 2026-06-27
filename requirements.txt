@@ -6,4 +6,6 @@ httpx
 sqlalchemy
 aiosqlite
 pwdlib[argon2]
+psycopg2-binary
+pydantic
 asyncpg
