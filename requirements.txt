@@ -4,4 +4,6 @@ fastapi
 uvicorn
 httpx
 sqlalchemy
-aiosqlite
+psycopg2-binary
+pydantic
+asyncpg

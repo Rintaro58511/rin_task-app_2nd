@@ -1,35 +1,47 @@
 from schemas.tasks import TaskSchema, UpdateAndCreateTaskSchema
+from models.tasks import Task
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+import uuid
 
-task_db = []
+async def fetch_task(task_id: uuid.UUID,
+                     db_session: AsyncSession) -> Task:
+    result = await db_session.execute(select(Task).filter(Task.task_id == task_id))
+    target_task = result.scalars().first()
 
-async def fetch_tasks():
-    return task_db
+    return target_task
 
-async def add_task(task: UpdateAndCreateTaskSchema):
-    max_task_id = max([t.task_id for t in task_db]) + 1 if task_db else 1
-    new_task = TaskSchema(task_id=max_task_id, **task.model_dump())
-    task_db.append(new_task)
+async def fetch_tasks(db_session: AsyncSession) -> list[Task]:
+    results = await db_session.execute(select(Task))
+    target_tasks = results.scalars().all()
+
+    return target_tasks
+
+async def add_task(task: UpdateAndCreateTaskSchema,
+                   db_session: AsyncSession) -> Task:
+    new_task = Task(**task.model_dump())
+    db_session.add(new_task)
+    await db_session.commit()
+    await db_session.refresh(new_task)
+
     return new_task
 
-async def remove_task(task_id: int):
-    deleted_task = task_db.pop(task_id-1)
-    return deleted_task
+async def remove_task(task_id: uuid.UUID,
+                      db_session: AsyncSession) -> None:
+    target_task = await fetch_task(task_id, db_session)
+    if target_task:
+        db_session.delete(target_task)
+        await db_session.commit()
 
-async def modify_task(task_id: int, task: TaskSchema):
+async def modify_task(task: UpdateAndCreateTaskSchema,
+                      task_id: uuid.UUID,
+                      db_session: AsyncSession) -> Task:
+    target_task = await fetch_task(task_id, db_session)
+    if target_task:
+        target_task.task_name = task.task_name
+        target_task.task_deadline = task.task_deadline
+        target_task.task_detail = task.task_detail
+    await db_session.commit()
+    await db_session.refresh(target_task)
 
-    for index, existing_task in enumerate(task_db):
-
-        if existing_task.task_id == task_id:
-            updated_task = TaskSchema(task_id = task_id, **task.model_dump())
-            task_db[index] = updated_task
-            return updated_task
-    
-    return None
-
-async def fetch_task(task_id: int):
-    for index, existing_task in enumerate(task_db):
-
-        if existing_task.task_id == task_id:
-            return task_db[index]
-        
-    return None
+    return target_task
