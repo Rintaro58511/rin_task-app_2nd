@@ -5,3 +5,5 @@ uvicorn
 httpx
 sqlalchemy
 aiosqlite
+pwdlib[argon2]
+asyncpg

@@ -12,5 +12,8 @@ services:
     volumes:
       - ./app:/usr/src/app
 
-    tty:
-      true
+    # 💡 tty: true はもう使わないので消すか、コメントアウトします
+    # tty: true
+    
+    # 💡 ここにいつもの Uvicorn 起動コマンドを追加する！
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload

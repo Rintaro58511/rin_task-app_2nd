@@ -1,8 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
 from sqlalchemy import String, UUID, Boolean
 import uuid
 from typing import List
-from models.tasks import Base, Task
+#from models.tasks import Base, Task
+
+class Base(DeclarativeBase):
+    pass
 
 class User(Base):
     __tablename__ = "users"
@@ -28,4 +31,4 @@ class User(Base):
         default=True,
         nullable = False
     )
-    tasks: Mapped[List["Task"]] = relationship(back_populates="user")
+    #tasks: Mapped[List["Task"]] = relationship(back_populates="user")
