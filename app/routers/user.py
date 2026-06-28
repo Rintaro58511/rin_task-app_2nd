@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from schemas.user import UserSchema, UserInDB, ResponseSchema
-from cruds.user import add_user, fetch_user
+from cruds.user import add_user, fetch_user_by_email
 from sqlalchemy.ext.asyncio import AsyncSession
 from pwdlib import PasswordHash
 import db
@@ -13,7 +13,7 @@ password_hash = PasswordHash.recommended()
 async def signup_user(user: UserInDB,
                       db_session: AsyncSession = Depends(db.get_db_session)):
     try:
-        hashed = password_hash.hash(user.password)
+        hashed = password_hash.hash(user.hashed_password)
         user.hashed_password = hashed
         new_user = await add_user(user, db_session)
         dict_user = UserSchema(
@@ -29,14 +29,14 @@ async def signup_user(user: UserInDB,
 
 @router.post("/login", response_model = ResponseSchema)
 async def login_user(user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)):
-    login_user = await fetch_user(user.user_id, db_session)
-    if login_user is None:
+    logining_user = await fetch_user_by_email(user.email, db_session)
+    if logining_user is None:
         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-    if not password_hash.verify(user.password, user.hashed_password):
+    if not password_hash.verify(user.hashed_password, logining_user.hashed_password):
         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
     dict_user = UserSchema(
-    user_id = login_user.user_id,
-    user_name = login_user.user_name,
-    email = login_user.email
+    user_id = logining_user.user_id,
+    user_name = logining_user.user_name,
+    email = logining_user.email
     )
     return ResponseSchema(message = "ログイン完了", user=dict_user)
