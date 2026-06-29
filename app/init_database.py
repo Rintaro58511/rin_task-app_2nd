@@ -1,6 +1,9 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 from models.tasks import Base
 import asyncio
+from db import Base
+from models.user import User
+from models.tasks import Task
 
 ASYNC_DB_URL = "postgresql+asyncpg://postgres:password123@db:5432/task_db"
 

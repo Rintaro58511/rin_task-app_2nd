@@ -1,8 +1,8 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship, DeclarativeBase
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, UUID, Boolean
 import uuid
 from typing import List
-from models.tasks import Base, Task
+from db import Base
 
 
 class User(Base):
@@ -20,4 +20,6 @@ class User(Base):
     )
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    tasks: Mapped[List["Task"]] = relationship(back_populates="user")
+    tasks: Mapped[List["Task"]] = relationship(
+        "Task", back_populates="user", cascade="all, delete-orphan"
+    )
