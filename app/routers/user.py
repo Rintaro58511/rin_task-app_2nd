@@ -1,42 +1,129 @@
 from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from schemas.user import UserSchema, UserInDB, ResponseSchema
 from cruds.user import add_user, fetch_user_by_email
 from sqlalchemy.ext.asyncio import AsyncSession
 from pwdlib import PasswordHash
 import db
 from uuid import UUID
+import jwt
+from jwt.exceptions import InvalidTokenError
+from datetime import datetime, timedelta, timezone
+from schemas.auth import TokenData, Token
+from typing import Annotated
+
 
 router = APIRouter()
 password_hash = PasswordHash.recommended()
 
-@router.post("/signup", response_model = ResponseSchema, status_code = status.HTTP_201_CREATED)
-async def signup_user(user: UserInDB,
-                      db_session: AsyncSession = Depends(db.get_db_session)):
+
+@router.post(
+    "/signup", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
+)
+async def signup_user(
+    user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)
+):
     try:
         hashed = password_hash.hash(user.hashed_password)
         user.hashed_password = hashed
         new_user = await add_user(user, db_session)
         dict_user = UserSchema(
-        user_id = new_user.user_id,
-        user_name = new_user.user_name,
-        email = new_user.email
+            user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
         )
-        return ResponseSchema(message = "ユーザーの登録ができました。", user=dict_user)
+        return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
     except HTTPException as he:
         raise he
     except Exception as e:
         raise HTTPException(status_code=400, detail="ユーザーの登録に失敗しました。")
 
-@router.post("/login", response_model = ResponseSchema)
-async def login_user(user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)):
-    logining_user = await fetch_user_by_email(user.email, db_session)
+
+# @router.post("/login", response_model = ResponseSchema)
+# async def login_user(user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)):
+#     logining_user = await fetch_user_by_email(user.email, db_session)
+#     if logining_user is None:
+#         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
+#     if not password_hash.verify(user.hashed_password, logining_user.hashed_password):
+#         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
+#     dict_user = UserSchema(
+#     user_id = logining_user.user_id,
+#     user_name = logining_user.user_name,
+#     email = logining_user.email
+#     )
+#     return ResponseSchema(message = "ログイン完了", user=dict_user)
+
+
+async def authenticate_user(
+    email: str, password: str, db_session: AsyncSession = Depends(db.get_db_session)
+):
+    logining_user = await fetch_user_by_email(email, db_session)
     if logining_user is None:
         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-    if not password_hash.verify(user.hashed_password, logining_user.hashed_password):
+    if not password_hash.verify(password, logining_user.hashed_password):
         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-    dict_user = UserSchema(
-    user_id = logining_user.user_id,
-    user_name = logining_user.user_name,
-    email = logining_user.email
+    return logining_user
+
+
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db_session: AsyncSession = Depends(db.get_db_session),
+):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
     )
-    return ResponseSchema(message = "ログイン完了", user=dict_user)
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")  # ここでuserのemailを取り出すらしい
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except InvalidTokenError:
+        raise credentials_exception
+    user = await fetch_user_by_email(
+        username, db_session
+    )  # usernameとなっているが中身はemail
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+@router.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db_session: AsyncSession = Depends(db.get_db_session),
+):
+    user = await authenticate_user(
+        form_data.username,  # メールアドレスを入れるためemailとしたいが
+        # 決まりでusernameにしないといけないらしい
+        form_data.password,
+        db_session,
+    )
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return Token(access_token=access_token, token_type="bearer")
