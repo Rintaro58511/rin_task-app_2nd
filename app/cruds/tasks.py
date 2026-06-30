@@ -5,7 +5,7 @@ from sqlalchemy import select
 from uuid import UUID
 
 
-async def fetch_task(task_id: uuid.UUID, db_session: AsyncSession) -> Task:
+async def fetch_task(task_id: UUID, db_session: AsyncSession) -> Task:
     result = await db_session.execute(select(Task).filter(Task.task_id == task_id))
     target_task = result.scalars().first()
 
@@ -30,7 +30,7 @@ async def add_task(
     return new_task
 
 
-async def remove_task(task_id: uuid.UUID, db_session: AsyncSession) -> None:
+async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
     target_task = await fetch_task(task_id, db_session)
     if target_task:
         db_session.delete(target_task)
@@ -38,7 +38,7 @@ async def remove_task(task_id: uuid.UUID, db_session: AsyncSession) -> None:
 
 
 async def modify_task(
-    task: UpdateAndCreateTaskSchema, task_id: uuid.UUID, db_session: AsyncSession
+    task: UpdateAndCreateTaskSchema, task_id: UUID, db_session: AsyncSession
 ) -> Task:
     target_task = await fetch_task(task_id, db_session)
     if target_task:
