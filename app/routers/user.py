@@ -5,7 +5,7 @@ from cruds.user import add_user, fetch_user_by_email
 from sqlalchemy.ext.asyncio import AsyncSession
 from pwdlib import PasswordHash
 import db
-from uuid import UUID
+import os
 import jwt
 from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
@@ -63,7 +63,7 @@ async def authenticate_user(
     return logining_user
 
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -91,14 +91,14 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")  # ここでuserのemailを取り出すらしい
-        if username is None:
+        email = payload.get("sub")  # ここでuserのemailを取り出すらしい
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
     user = await fetch_user_by_email(
-        username, db_session
+        email, db_session
     )  # usernameとなっているが中身はemail
     if user is None:
         raise credentials_exception
@@ -111,8 +111,7 @@ async def login_for_access_token(
     db_session: AsyncSession = Depends(db.get_db_session),
 ):
     user = await authenticate_user(
-        form_data.username,  # メールアドレスを入れるためemailとしたいが
-        # 決まりでusernameにしないといけないらしい
+        form_data.username,  # メールアドレスを入れるためemailとしたいが決まりでusernameにしないといけないらしい
         form_data.password,
         db_session,
     )
