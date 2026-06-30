@@ -4,6 +4,7 @@ from cruds.tasks import add_task, fetch_tasks, remove_task, modify_task, fetch_t
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
 from uuid import UUID
+from routers.user import get_current_user
 
 router = APIRouter()
 
@@ -14,6 +15,7 @@ router = APIRouter()
 async def create_task(
     task: UpdateAndCreateTaskSchema,
     db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
 ):
 
     try:
@@ -30,7 +32,10 @@ async def create_task(
 
 
 @router.get("/tasks", response_model=list[TaskSchema])
-async def list_task(db_session: AsyncSession = Depends(db.get_db_session)):
+async def list_task(
+    db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
+):
     tasks = await fetch_tasks(db_session)
     return tasks
 
