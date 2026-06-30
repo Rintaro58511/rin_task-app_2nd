@@ -5,7 +5,7 @@ from cruds.user import add_user, fetch_user_by_email
 from sqlalchemy.ext.asyncio import AsyncSession
 from pwdlib import PasswordHash
 import db
-from uuid import UUID
+import os
 import jwt
 from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
@@ -37,21 +37,6 @@ async def signup_user(
         raise HTTPException(status_code=400, detail="ユーザーの登録に失敗しました。")
 
 
-# @router.post("/login", response_model = ResponseSchema)
-# async def login_user(user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)):
-#     logining_user = await fetch_user_by_email(user.email, db_session)
-#     if logining_user is None:
-#         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-#     if not password_hash.verify(user.hashed_password, logining_user.hashed_password):
-#         raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-#     dict_user = UserSchema(
-#     user_id = logining_user.user_id,
-#     user_name = logining_user.user_name,
-#     email = logining_user.email
-#     )
-#     return ResponseSchema(message = "ログイン完了", user=dict_user)
-
-
 async def authenticate_user(
     email: str, password: str, db_session: AsyncSession = Depends(db.get_db_session)
 ):
@@ -63,7 +48,7 @@ async def authenticate_user(
     return logining_user
 
 
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
