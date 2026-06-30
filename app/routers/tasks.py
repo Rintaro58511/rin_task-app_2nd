@@ -19,7 +19,7 @@ async def create_task(
 ):
 
     try:
-        new_task = await add_task(task, db_session)
+        new_task = await add_task(task, db_session, current_user.user_id)
         dict_task = TaskSchema(
             task_id=new_task.task_id,
             task_name=new_task.task_name,
@@ -36,7 +36,7 @@ async def list_task(
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
-    tasks = await fetch_tasks(db_session)
+    tasks = await fetch_tasks(db_session, current_user.user_id)
     return tasks
 
 
