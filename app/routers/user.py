@@ -91,15 +91,13 @@ async def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username = payload.get("sub")  # ここでuserのemailを取り出すらしい
-        if username is None:
+        email = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
-    user = await fetch_user_by_email(
-        username, db_session
-    )  # usernameとなっているが中身はemail
+    user = await fetch_user_by_email(email, db_session)
     if user is None:
         raise credentials_exception
     return user
@@ -111,8 +109,7 @@ async def login_for_access_token(
     db_session: AsyncSession = Depends(db.get_db_session),
 ):
     user = await authenticate_user(
-        form_data.username,  # メールアドレスを入れるためemailとしたいが
-        # 決まりでusernameにしないといけないらしい
+        form_data.username,  # メールアドレスを入れるためemailとしたいが決まりでusernameにしないといけないらしい
         form_data.password,
         db_session,
     )
