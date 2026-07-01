@@ -1,7 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from datetime import date
 import uuid
-from models.tasks import Task
 
 
 class UpdateAndCreateTaskSchema(BaseModel):
@@ -12,6 +11,11 @@ class UpdateAndCreateTaskSchema(BaseModel):
 
 class TaskSchema(UpdateAndCreateTaskSchema):
     task_id: uuid.UUID = Field(...)
+
+    @property
+    @computed_field
+    def is_expired(self) -> bool:
+        return self.task_deadline < date.today()
 
 
 class ResponseSchema(BaseModel):
