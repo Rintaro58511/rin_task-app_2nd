@@ -1,9 +1,8 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from schemas.user import UserSchema, UserInDB, ResponseSchema
-from cruds.user import add_user, fetch_user_by_email
+from cruds.user import add_user, fetch_user_by_email, authenticate_user
 from sqlalchemy.ext.asyncio import AsyncSession
-from pwdlib import PasswordHash
 import db
 import os
 import jwt
@@ -14,7 +13,6 @@ from typing import Annotated
 
 
 router = APIRouter()
-password_hash = PasswordHash.recommended()
 
 
 @router.post(
@@ -24,8 +22,6 @@ async def signup_user(
     user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)
 ):
     try:
-        hashed = password_hash.hash(user.hashed_password)
-        user.hashed_password = hashed
         new_user = await add_user(user, db_session)
         dict_user = UserSchema(
             user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
@@ -35,17 +31,6 @@ async def signup_user(
         raise he
     except Exception as e:
         raise HTTPException(status_code=400, detail="ユーザーの登録に失敗しました。")
-
-
-async def authenticate_user(
-    email: str, password: str, db_session: AsyncSession = Depends(db.get_db_session)
-):
-    logining_user = await fetch_user_by_email(email, db_session)
-    if logining_user is None:
-        raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-    if not password_hash.verify(password, logining_user.hashed_password):
-        raise HTTPException(status_code=400, detail="ユーザの情報が異なります。")
-    return logining_user
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")
