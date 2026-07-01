@@ -10,6 +10,7 @@ from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
 from schemas.auth import TokenData, Token
 from typing import Annotated
+from models.user import User
 
 
 router = APIRouter()
@@ -94,3 +95,13 @@ async def login_for_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
     return Token(access_token=access_token, token_type="bearer")
+
+
+@router.get("/users/me", response_model=ResponseSchema)
+async def get_my_info(current_user: User = Depends(get_current_user)):
+    dict_user = UserSchema(
+        user_id=current_user.user_id,
+        user_name=current_user.user_name,
+        email=current_user.email,
+    )
+    return ResponseSchema(message="ユーザ情報を取得しました。", user=dict_user)
