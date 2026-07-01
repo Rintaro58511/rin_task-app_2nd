@@ -47,3 +47,17 @@ async def modify_task(
     await db_session.refresh(target_task)
 
     return target_task
+
+
+async def sort_task(
+    db_session: AsyncSession, user_id: UUID, sort_order: str = "asc"
+) -> list[Task]:
+    stmt = select(Task).where(Task.user_id == user_id)
+
+    if sort_order == "desc":
+        stmt = stmt.order_by(Task.task_deadline.desc())
+    else:
+        stmt = stmt.order_by(Task.task_deadline.asc())
+
+    result = await db_session.execute(stmt)
+    return list(result.scalars().all())

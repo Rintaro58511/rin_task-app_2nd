@@ -1,6 +1,13 @@
 from fastapi import APIRouter, status, HTTPException, Depends
 from schemas.tasks import UpdateAndCreateTaskSchema, TaskSchema, ResponseSchema
-from cruds.tasks import add_task, fetch_tasks, remove_task, modify_task, fetch_task
+from cruds.tasks import (
+    add_task,
+    fetch_tasks,
+    remove_task,
+    modify_task,
+    fetch_task,
+    sort_task,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
 from uuid import UUID
@@ -89,3 +96,13 @@ async def search_task(
 ):
     task = await fetch_task(task_id, db_session)
     return task
+
+
+@router.get("/tasks", ResponseSchema=list[TaskSchema])
+async def sort_tasks(
+    sort: str = "asc",
+    db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
+):
+    sorted_tasks = await sort_tasks(db_session, current_user.user_id, sort)
+    return sorted_tasks
