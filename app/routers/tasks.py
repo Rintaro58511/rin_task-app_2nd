@@ -42,11 +42,15 @@ async def list_task(
 
 @router.delete("/tasks/{task_id}", response_model=ResponseSchema)
 async def delete_task(
-    task_id: UUID, db_session: AsyncSession = Depends(db.get_db_session)
+    task_id: UUID,
+    db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
 ):
     deleted_task = await fetch_task(task_id, db_session)
     if deleted_task is None:
         raise HTTPException(status_code=400, detail="タスクの削除に失敗しました。")
+    if deleted_task.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
     dict_task = TaskSchema(
         task_id=deleted_task.task_id,
         task_name=deleted_task.task_name,
@@ -62,10 +66,14 @@ async def update_task(
     task_id: UUID,
     task: UpdateAndCreateTaskSchema,
     db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
 ):
-    updated_task = await modify_task(task, task_id, db_session)
+    updated_task = await fetch_task(task_id, db_session)
     if updated_task is None:
-        raise HTTPException(status_code=404, detail="指定されたタスクが存在しません")
+        raise HTTPException(status_code=400, detail="指定されたタスクが存在しません。")
+    if updated_task.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
+    updated_task = await modify_task(task, task_id, db_session)
     dict_task = TaskSchema(
         task_id=task_id,
         task_name=updated_task.task_name,

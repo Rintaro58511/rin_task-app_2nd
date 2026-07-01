@@ -38,13 +38,11 @@ async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
 
 
 async def modify_task(
-    task: UpdateAndCreateTaskSchema, task_id: UUID, db_session: AsyncSession
+    task: UpdateAndCreateTaskSchema, target_task: Task, db_session: AsyncSession
 ) -> Task:
-    target_task = await fetch_task(task_id, db_session)
-    if target_task:
-        target_task.task_name = task.task_name
-        target_task.task_deadline = task.task_deadline
-        target_task.task_detail = task.task_detail
+    target_task.task_name = task.task_name
+    target_task.task_deadline = task.task_deadline
+    target_task.task_detail = task.task_detail
     await db_session.commit()
     await db_session.refresh(target_task)
 
