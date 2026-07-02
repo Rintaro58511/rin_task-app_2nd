@@ -1,8 +1,9 @@
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy import Text, UUID, Date, ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Text, UUID, Date, ForeignKey, Enum as SQLEnum
 import uuid
 from datetime import date
 from db import Base
+from enums import TaskStatus
 
 
 class Task(Base):
@@ -20,3 +21,6 @@ class Task(Base):
         UUID, ForeignKey("users.user_id"), nullable=False
     )
     user: Mapped["User"] = relationship("User", back_populates="tasks")
+    status: Mapped[TaskStatus] = mapped_column(
+        SQLEnum(TaskStatus), default=TaskStatus.TODO, nullable=False
+    )
