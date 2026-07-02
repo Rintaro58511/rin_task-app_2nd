@@ -49,7 +49,7 @@ async def modify_task(
     return target_task
 
 
-async def sort_task(
+async def sort_tasks(
     db_session: AsyncSession, user_id: UUID, sort_order: str = "asc"
 ) -> list[Task]:
     stmt = select(Task).where(Task.user_id == user_id)

@@ -6,7 +6,7 @@ from cruds.tasks import (
     remove_task,
     modify_task,
     fetch_task,
-    sort_task,
+    sort_tasks,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
