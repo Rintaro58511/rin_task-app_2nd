@@ -32,9 +32,13 @@ async def create_task(
             task_name=new_task.task_name,
             task_deadline=new_task.task_deadline,
             task_detail=new_task.task_detail,
+            task_status=new_task.task_status,
         )
         return ResponseSchema(message="タスク追加ができました", task=dict_task)
     except Exception as e:
+        import traceback
+
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail="タスクの登録に失敗しました。")
 
 
@@ -63,6 +67,7 @@ async def delete_task(
         task_name=deleted_task.task_name,
         task_deadline=deleted_task.task_deadline,
         task_detail=deleted_task.task_detail,
+        task_status=deleted_task.task_status,
     )
     await remove_task(task_id, db_session)
     return ResponseSchema(message="タスクを削除しました", task=dict_task)
@@ -75,17 +80,18 @@ async def update_task(
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
-    updated_task = await fetch_task(task_id, db_session)
-    if updated_task is None:
+    target_task = await fetch_task(task_id, db_session)
+    if target_task is None:
         raise HTTPException(status_code=400, detail="指定されたタスクが存在しません。")
-    if updated_task.user_id != current_user.user_id:
+    if target_task.user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
-    updated_task = await modify_task(task, task_id, db_session)
+    updated_task = await modify_task(task, target_task, db_session)
     dict_task = TaskSchema(
-        task_id=task_id,
+        task_id=updated_task.task_id,
         task_name=updated_task.task_name,
         task_deadline=updated_task.task_deadline,
         task_detail=updated_task.task_detail,
+        task_status=updated_task.task_status,
     )
     return ResponseSchema(message="タスクを更新しました", task=dict_task)
 
@@ -98,7 +104,7 @@ async def search_task(
     return task
 
 
-@router.get("/tasks", ResponseSchema=list[TaskSchema])
+@router.get("/tasks", response_model=list[TaskSchema])
 async def sort_tasks(
     sort: str = "asc",
     db_session: AsyncSession = Depends(db.get_db_session),

@@ -21,6 +21,6 @@ class Task(Base):
         UUID, ForeignKey("users.user_id"), nullable=False
     )
     user: Mapped["User"] = relationship("User", back_populates="tasks")
-    status: Mapped[TaskStatus] = mapped_column(
+    task_status: Mapped[TaskStatus] = mapped_column(
         SQLEnum(TaskStatus), default=TaskStatus.TODO, nullable=False
     )
