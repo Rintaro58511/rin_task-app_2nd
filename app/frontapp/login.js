@@ -5,32 +5,32 @@ function displayMessage(message){
 }
 
 function resetForm(){
-    document.getElementById('name').value = ''
+    document.getElementById('email').value = ''
     document.getElementById('password').value = ''
 }
 
 document.getElementById('loginUserForm').addEventListener('submit', async function (event) {
     event.preventDefault();
 
-    const name = document.getElementById('name').value
-    const password = document.getElementById('password').value
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
 
     const userData = {
-        user_name : name,
+        email: email,
         password: password
     }
 
     const isSuccess = await loginUser(userData);
 
     if (isSuccess){
-        localStorage.setItem('currentUser', name); 
+        localStorage.setItem('currentUser', email); 
     }
 })
 
 async function loginUser(user){
     try{
         const formData = new FormData();
-        formData.append('username', user.user_name); 
+        formData.append('username', user.email); 
         formData.append('password', user.password);
         const response = await fetch(apiUrl, {
             method: 'POST',
