@@ -35,6 +35,12 @@ document.getElementById('loginUserForm').addEventListener('submit', async functi
     if(password.length < 6){
         errors.push("パスワードは6文字以上です");
     }
+    
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+    if (!emailRegex.test(email)) {
+        errors.push("正しいメールアドレスの形式で入力してください");
+    }
 
     if (errors.length > 0) {
         displayMessage(errors);
