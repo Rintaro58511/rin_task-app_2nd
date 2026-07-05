@@ -25,6 +25,8 @@ function resetForm(){
 document.getElementById('loginUserForm').addEventListener('submit', async function (event) {
     event.preventDefault();
 
+    displayMessage([]);
+
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
 
