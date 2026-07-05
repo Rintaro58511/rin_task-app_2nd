@@ -13,7 +13,7 @@ from typing import Annotated
 from models.user import User
 
 
-router = APIRouter()
+router = APIRouter(prefix="/user")
 
 
 @router.post(
@@ -37,7 +37,7 @@ async def signup_user(
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")
 
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
@@ -97,7 +97,7 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 
 
-@router.get("/users/me", response_model=ResponseSchema)
+@router.get("/me", response_model=ResponseSchema)
 async def get_my_info(current_user: User = Depends(get_current_user)):
     dict_user = UserSchema(
         user_id=current_user.user_id,
