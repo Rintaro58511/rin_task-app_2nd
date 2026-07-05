@@ -1,25 +1,55 @@
 const apiUrl = "http://localhost:8002/user/signup"
 
-function displayMessage(message){
-    alert(message);
+function displayMessage(messages){
+const container = document.getElementById('errorContainer');
+
+    if(!messages || messages.length === 0){
+        container.innerHTML = '';
+        return;
+    }
+
+    const errorList = Array.isArray(messages) ? messages : [messages];
+    let html = `<div class="alert alert-danger p-2 small"><ul class="mb-0 ps-3">`;
+    for (const msg of errorList) {
+        html += `<li>${msg}</li>`;
+    }
+    html += `</ul></div>`;
+    container.innerHTML = html;
 }
 
 function resetForm(){
     document.getElementById('name').value = '';
+    document.getElementById('email').value = '';
     document.getElementById('password').value = '';
     document.getElementById('password_confirm').value = '';
 }
 
 document.getElementById('createUserForm').addEventListener('submit', async function(event) {
     event.preventDefault();
+
+    displayMessage([]);
     
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     const passwordComfirm = document.getElementById('password_confirm').value;
 
+    const errors = [];
+
     if(password != passwordComfirm){
-        displayMessage("パスワードと確認用パスワードが一致しません");
+        errors.push("パスワードと確認用パスワードが一致しません");
+    }
+
+    if(name.length < 3){
+        errors.push("ユーザ名は3文字以上です");
+    }
+
+    if(password.length < 6){
+        errors.push("パスワードは6文字以上です");
+    }
+
+    if (errors.length > 0) {
+        displayMessage(errors);
         return false;
     }
 
@@ -46,11 +76,11 @@ async function signUpUser(user) {
         const data = await response.json();
 
         if(response.ok){
-            displayMessage(data.message || 'サインアップに成功しました');
+            alert(data.message || 'サインアップに成功しました');
             resetForm();
             return true;
         }else{
-            displayMessage(data.detail || 'サインアップに失敗しました')
+            alert(data.detail || 'サインアップに失敗しました')
             return false;
         }
     }catch(error){
