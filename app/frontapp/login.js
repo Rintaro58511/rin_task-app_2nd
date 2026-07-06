@@ -35,7 +35,7 @@ document.getElementById('loginUserForm').addEventListener('submit', async functi
     if(password.length < 6){
         errors.push("パスワードは6文字以上です");
     }
-    
+
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
     if (!emailRegex.test(email)) {
@@ -72,7 +72,7 @@ async function loginUser(user){
         if(response.ok){
             localStorage.setItem('token', data.access_token);
             alert(data.message || 'ログインに成功しました');
-            resetForm();
+            location.href = "./task_list.html"
             return true;
         }else{
             alert(data.detail || 'ログインに失敗しました');

@@ -79,11 +79,15 @@ async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db_session: AsyncSession = Depends(db.get_db_session),
 ):
+
+    print(f"--- ログイン試行: {form_data.username} / {form_data.password} ---")
+
     user = await authenticate_user(
         form_data.username,  # メールアドレスを入れるためemailとしたいが決まりでusernameにしないといけないらしい
         form_data.password,
         db_session,
     )
+    print(f"--- 認証結果のユーザーオブジェクト: {user} ---")
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

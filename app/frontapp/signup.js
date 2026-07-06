@@ -24,11 +24,11 @@ function resetForm(){
     document.getElementById('password_confirm').value = '';
 }
 
-document.getElementById('createUserForm').addEventListener('submit', async function(event) {
+document.getElementById('createUserForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
     displayMessage([]);
-    
+
     const name = document.getElementById('name').value;
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -65,8 +65,8 @@ document.getElementById('createUserForm').addEventListener('submit', async funct
         hashed_password: password
     };
 
-    await signUpUser(userData);
-})
+    signUpUser(userData);
+});
 
 async function signUpUser(user) {
     try{
@@ -79,11 +79,11 @@ async function signUpUser(user) {
             body: JSON.stringify(user)
         });
 
-        const data = await response.json();
+        const data = response.json();
 
         if(response.ok){
             alert(data.message || 'サインアップに成功しました');
-            resetForm();
+            window.location.href = "./login.html";            
             return true;
         }else{
             alert(data.detail || 'サインアップに失敗しました')
