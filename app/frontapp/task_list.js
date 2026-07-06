@@ -147,7 +147,7 @@ function display_tasks(tasks){
                     <div class="card-body">
                         <h5 class="card-title">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
-                        <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.taskStatus}</h6>
+                        <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status}</h6>
                         <p class="card-text">${task.task_detail}</p>
                     </div>
                 </div>
