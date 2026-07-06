@@ -107,7 +107,7 @@ async function fetchAndDisplayTasks(){
     const token = localStorage.getItem('token');
 
     if(!token){
-        alert("トークンが期限切れです。再度ログインして下さい。");
+        alert("トークンがありません。ログインして下さい。");
         window.location.href = "./login.html";
         return;
     }
