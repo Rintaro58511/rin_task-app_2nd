@@ -33,7 +33,7 @@ async def add_task(
 async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
     target_task = await fetch_task(task_id, db_session)
     if target_task:
-        db_session.delete(target_task)
+        await db_session.delete(target_task)
         await db_session.commit()
 
 

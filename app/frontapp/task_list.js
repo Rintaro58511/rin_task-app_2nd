@@ -1,7 +1,8 @@
 const apiUrl = "http://localhost:8002/tasks"
 
-const addButton = document.getElementById("addButton")
-const createTaskForm = document.getElementById("createTaskForm")
+const addButton = document.getElementById("addButton");
+const createTaskForm = document.getElementById("createTaskForm");
+// const deleteButton = document.getElementById("deleteButton");
 
 addButton.addEventListener("click", function(){
 
@@ -88,7 +89,7 @@ async function addTask(task){
             createTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
         }else if(response.status === 401){
-            alert(tasks.detail || "認証エラーが発生しました。再度ログインしてください。");
+            alert(data.detail || "認証エラーが発生しました。再度ログインしてください。");
             localStorage.removeItem('token');
             window.location.href = "./login.html";
         }else{
@@ -121,10 +122,10 @@ async function fetchAndDisplayTasks(){
             }
         });
 
-        tasks = await response.json();
+        const tasks = await response.json();
 
         if(response.ok){
-            display_tasks(tasks);
+            displayTasks(tasks);
         }else{
             alert("トークンが期限切れです。再度ログインして下さい。");
             window.location.href = "./login.html";
@@ -135,8 +136,8 @@ async function fetchAndDisplayTasks(){
     }
 }
 
-function display_tasks(tasks){
-    const list = document.getElementById('task_list');
+function displayTasks(tasks){
+    const list = document.getElementById('taskList');
     list.innerHTML = '';
 
     let htmlContent = '';
@@ -149,10 +150,59 @@ function display_tasks(tasks){
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
                         <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status}</h6>
                         <p class="card-text">${task.task_detail}</p>
+                        <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                     </div>
                 </div>
             </div>
         `;
     });
     list.innerHTML = htmlContent;
+}
+
+document.getElementById('taskList').addEventListener("click", async function(event){
+
+    if(!event.target.classList.contains('deleteButton') && !event.target.classList.contains('updateButton')) return;
+
+    const taskId = event.target.dataset.id;
+
+    if(event.target.classList.contains('deleteButton')){
+        deleteTask(taskId);
+    }
+
+});
+
+async function deleteTask(taskId){
+    console.log("削除しようとしているタスクID:", taskId)
+    const token = localStorage.getItem("token");
+
+    if(!token){
+        alert("トークンを所有していません。ログインして下さい。");
+        window.location.href = "./login.html";
+        return;
+    }
+
+    try{
+        const response = await fetch(`${apiUrl}/${taskId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        console.log("ステータスコード:", response.status);
+
+        if(response.ok){
+            alert("タスクを削除しました");
+            await fetchAndDisplayTasks();
+        }else if(response.status === 401) {
+            alert("認証エラーが発生しました。再度ログインしてください。");
+            localStorage.removeItem('token');
+            window.location.href = "./login.html";
+        }else{
+            alert("タスクの削除に失敗しました。");
+        }
+    }catch(error){
+        console.error('タスク削除中にエラーが発生しました', error);
+    }
 }
