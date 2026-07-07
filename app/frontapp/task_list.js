@@ -2,12 +2,11 @@ const apiUrl = "http://localhost:8002/tasks"
 
 const addButton = document.getElementById("addButton");
 const createTaskForm = document.getElementById("createTaskForm");
-// const deleteButton = document.getElementById("deleteButton");
 
 addButton.addEventListener("click", function(){
 
     createTaskForm.innerHTML = `
-        <div class="card mb-3" style="width: 20rem;">
+        <div class="card mb-3" style="width: 20rem; border-color: green;">
             <div class="card-body">
                 <div class="mb-3">
                     <label for="taskName" class="form-label">タスク名</label>
@@ -28,17 +27,18 @@ addButton.addEventListener("click", function(){
                     <label class="form-label">タスク進捗</label>
                     <div class="btn-group w-100" role="group">
                         <input type="radio" class="btn-check" name="taskStatus" id="statusTodo" value="TODO" checked>
-                        <label class="btn btn-outline-primary" for="statusTodo">TODO</label>
+                        <label class="btn btn-outline-success" for="statusTodo">TODO</label>
 
                         <input type="radio" class="btn-check" name="taskStatus" id="statusProgress" value="IN_PROGRESS">
-                        <label class="btn btn-outline-primary" for="statusProgress">IN_PROGRESS</label>
+                        <label class="btn btn-outline-success" for="statusProgress">IN_PROGRESS</label>
 
                         <input type="radio" class="btn-check" name="taskStatus" id="statusDone" value="DONE">
-                        <label class="btn btn-outline-primary" for="statusDone">DONE</label>
+                        <label class="btn btn-outline-success" for="statusDone">DONE</label>
                     </div>
                 </div>
 
-            <button type="submit" class="btn btn-primary w-100 mt-2">登録完了</button>
+            <button type="submit" class="btn btn-success w-100 mt-2">登録完了</button>
+            <button type="button" class="btn btn-secondary w-100 mt-1" onclick="document.getElementById('createTaskForm').innerHTML=''">キャンセル</button>
             </div>
         </div>
     `;
@@ -57,7 +57,7 @@ createTaskForm.addEventListener('submit', function(event){
         task_name: taskName,
         task_deadline: taskDeadline,
         task_detail: taskDetail,
-        taskStatus: selectedStatus
+        task_status: selectedStatus
     };
 
     addTask(taskData);
@@ -143,13 +143,14 @@ function displayTasks(tasks){
     let htmlContent = '';
     tasks.forEach(function(task){
         htmlContent += `
-            <div class="col">
+            <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3" style="width: 18rem;">
                     <div class="card-body">
                         <h5 class="card-title">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
                         <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status}</h6>
                         <p class="card-text">${task.task_detail}</p>
+                        <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                     </div>
                 </div>
@@ -168,11 +169,13 @@ document.getElementById('taskList').addEventListener("click", async function(eve
     if(event.target.classList.contains('deleteButton')){
         deleteTask(taskId);
     }
+    if(event.target.classList.contains('updateButton')){
+        updateTask(taskId);
+    }
 
 });
 
 async function deleteTask(taskId){
-    console.log("削除しようとしているタスクID:", taskId)
     const token = localStorage.getItem("token");
 
     if(!token){
@@ -190,8 +193,6 @@ async function deleteTask(taskId){
             }
         });
 
-        console.log("ステータスコード:", response.status);
-
         if(response.ok){
             alert("タスクを削除しました");
             await fetchAndDisplayTasks();
@@ -204,5 +205,127 @@ async function deleteTask(taskId){
         }
     }catch(error){
         console.error('タスク削除中にエラーが発生しました', error);
+    }
+}
+
+const updateButton = document.getElementById('updateButton');
+
+async function updateTask(taskId){
+    const token = localStorage.getItem("token");
+    if(!token){
+        alert("トークンがありません。ログインしてください");
+        window.location.href = "./login";
+        return;
+    }
+
+    try{
+        const response_for_get = await fetch(`${apiUrl}/${taskId}`, {
+            method: 'GET',
+            headers:{
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        })
+
+        if(!response_for_get.ok) {
+            alert("タスク情報の取得に失敗しました");
+            return;
+        }
+
+        const task = await response_for_get.json();
+        const updateTaskForm = document.getElementById('updateTaskForm');
+
+        updateTaskForm.innerHTML = `
+            <div class="card mb-3" style="width: 20rem; border-color: yellow;">
+                <div class="card-body">
+                    <h5>タスクの編集</h5>
+                    <input type="hidden" id="updateTaskId" value="${task.task_id}">
+                    
+                    <div class="mb-3">
+                        <label for="updateTaskName" class="form-label">タスク名</label>
+                        <input type="text" id="updateTaskName" class="form-control" value="${task.task_name}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="updateTaskDeadline" class="form-label">タスク締切</label>
+                        <input type="date" id="updateTaskDeadline" class="form-control" value="${task.task_deadline}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="updateTaskDetail" class="form-label">タスク詳細</label>
+                        <input type="text" id="updateTaskDetail" class="form-control" value="${task.task_detail}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">タスク進捗</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" checked>
+                            <label class="btn btn-outline-warning" for="statusTodo">TODO</label>
+
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS">
+                            <label class="btn btn-outline-warning" for="statusProgress">IN_PROGRESS</label>
+
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE">
+                            <label class="btn btn-outline-warning" for="statusDone">DONE</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning w-100 mt-2">変更を保存</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-1" onclick="cancelUpdate('${task.task_id}')">キャンセル</button>
+                </div>
+            </div>
+        `;
+        const targetCard = document.getElementById(`task-card-${taskId}`);
+        if (targetCard) {
+            targetCard.style.display = 'none';
+        }
+    }catch(error){
+        console.error('タスク取得中にエラーが発生しました', error);
+    }
+}
+
+const updateTaskForm = document.getElementById('updateTaskForm');
+updateTaskForm.addEventListener('submit', async function(event){
+    event.preventDefault();
+
+    const taskId = document.getElementById('updateTaskId').value;
+    const token = localStorage.getItem('token');
+
+    const taskData = {
+        task_name: document.getElementById('updateTaskName').value,
+        task_deadline: document.getElementById('updateTaskDeadline').value,
+        task_detail: document.getElementById('updateTaskDetail').value,
+        task_status: document.querySelector('input[name="updateTaskStatus"]:checked').value
+    };
+
+    try {
+        const response = await fetch(`${apiUrl}/${taskId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(taskData)
+        });
+
+        if (response.ok) {
+            alert("タスクを更新しました");
+            updateTaskForm.innerHTML = '';
+            fetchAndDisplayTasks();
+        } else {
+            const err = await response.json();
+            alert(err.detail || "タスクの更新に失敗しました");
+        }
+    } catch (error) {
+        console.error('タスク更新中にエラーが発生しました', error);
+    }
+});
+
+function cancelUpdate(taskId) {
+    document.getElementById('updateTaskForm').innerHTML = '';
+    
+    const targetCard = document.getElementById(`task-card-${taskId}`);
+    if (targetCard) {
+        targetCard.style.display = 'block';
     }
 }
