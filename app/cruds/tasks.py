@@ -1,7 +1,7 @@
 from schemas.tasks import TaskSchema, UpdateAndCreateTaskSchema
 from models.tasks import Task
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, case
 from uuid import UUID
 
 
@@ -51,14 +51,20 @@ async def modify_task(
 
 
 async def arrange_tasks(
-    db_session: AsyncSession, user_id: UUID, sort_order: str = "asc"
+    db_session: AsyncSession, user_id: UUID, sort_order: str
 ) -> list[Task]:
     stmt = select(Task).where(Task.user_id == user_id)
 
-    if sort_order == "desc":
-        stmt = stmt.order_by(Task.task_deadline.desc())
-    else:
-        stmt = stmt.order_by(Task.task_deadline.asc())
+    if sort_order == "deadline":
+        stmt = stmt.order_by(Task.task_deadline.asc(), Task.task_status.asc())
+    if sort_order == "status":
+        status_order = case(
+            (Task.task_status == "TODO", 1),
+            (Task.task_status == "IN_PROGRESS", 2),
+            (Task.task_status == "DONE", 3),
+            else_=4,
+        )
+        stmt = stmt.order_by(status_order, Task.task_deadline.asc())
 
     result = await db_session.execute(stmt)
     return list(result.scalars().all())
