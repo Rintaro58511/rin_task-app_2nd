@@ -48,7 +48,7 @@ async def get_tasks(
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
-    if sort in ["asc", "desc"]:
+    if sort in ["deadline", "status"]:
         return await arrange_tasks(db_session, current_user.user_id, sort)
 
     return await fetch_tasks(db_session, current_user.user_id)

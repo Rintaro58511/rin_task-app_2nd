@@ -1,4 +1,5 @@
 const apiUrl = "http://localhost:8002/tasks"
+let currentSort = null;
 
 function getToken(){
     const token = localStorage.getItem('token');
@@ -131,9 +132,16 @@ async function fetchAndDisplayTasks(){
     const token = getToken()
 
     try{
+
+        let requestUrl = apiUrl;
+        if (currentSort) {
+            requestUrl = `${apiUrl}?sort=${currentSort}`;
+        }
+
         const response = await send_request({
             method: 'GET',
             token: token,
+            url: requestUrl
         });
 
         const tasks = await response.json();
@@ -332,9 +340,11 @@ function cancelUpdate(taskId) {
     }
 }
 
-const sortButton = document.getElementById('sortButton');
-sortButton.addEventListener("click", async function(event){
+const sortDeadline = document.getElementById('sortDeadline');
+sortDeadline.addEventListener("click", async function(event){
     event.preventDefault();
+
+    currentSort = "deadline";
 
     const token = getToken();
 
@@ -342,12 +352,39 @@ sortButton.addEventListener("click", async function(event){
         const response = await send_request({
             method: 'GET',
             token: token,
-            url: `${apiUrl}?sort=asc`
-        })
+            url: `${apiUrl}?sort=deadline`
+        });
 
         if(response.ok){
             const sorted_tasks = await response.json();
-            displayTasks(sorted_tasks)
+            displayTasks(sorted_tasks);
+        }else{
+            const err = await response.json();
+            alert(err.detail || "タスクの更新に失敗しました");
+        }
+    }catch(error){
+        console.error('タスク並び替え中にエラーが発生しました', error);
+    }
+})
+
+const sortStatus = document.getElementById('sortStatus');
+sortStatus.addEventListener("click", async function(event){
+    event.preventDefault();
+
+    currentSort = "status";
+
+    const token = getToken();
+
+    try{
+        const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: `${apiUrl}?sort=status`
+        });
+
+        if(response.ok){
+            const sorted_tasks = await response.json();
+            displayTasks(sorted_tasks);
         }else{
             const err = await response.json();
             alert(err.detail || "タスクの更新に失敗しました");
