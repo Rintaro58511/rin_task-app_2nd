@@ -6,7 +6,7 @@ from cruds.tasks import (
     remove_task,
     modify_task,
     fetch_task,
-    sort_tasks,
+    arrange_tasks,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
@@ -43,12 +43,15 @@ async def create_task(
 
 
 @router.get("/tasks", response_model=list[TaskSchema])
-async def list_task(
+async def get_tasks(
+    sort: str | None = None,
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
-    tasks = await fetch_tasks(db_session, current_user.user_id)
-    return tasks
+    if sort in ["asc", "desc"]:
+        return await arrange_tasks(db_session, current_user.user_id, sort)
+
+    return await fetch_tasks(db_session, current_user.user_id)
 
 
 @router.delete("/tasks/{task_id}", response_model=ResponseSchema)
@@ -102,13 +105,3 @@ async def search_task(
 ):
     task = await fetch_task(task_id, db_session)
     return task
-
-
-@router.get("/tasks", response_model=list[TaskSchema])
-async def sort_tasks(
-    sort: str = "asc",
-    db_session: AsyncSession = Depends(db.get_db_session),
-    current_user=Depends(get_current_user),
-):
-    sorted_tasks = await sort_tasks(db_session, current_user.user_id, sort)
-    return sorted_tasks

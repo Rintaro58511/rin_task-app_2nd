@@ -1,5 +1,35 @@
 const apiUrl = "http://localhost:8002/tasks"
 
+function getToken(){
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        alert("ログインセッションが切れました。再ログインしてください。");
+        window.location.href = "./login.html";
+        return;
+    }
+
+    return token;
+}
+
+async function send_request({method, token, url=apiUrl, body = null}){
+
+    const options = {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    };
+
+    if (body) {
+        options.body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, options);
+    return response;
+}
+
 const addButton = document.getElementById("addButton");
 const createTaskForm = document.getElementById("createTaskForm");
 
@@ -64,22 +94,14 @@ createTaskForm.addEventListener('submit', function(event){
 })
 
 async function addTask(task){
-    const token = localStorage.getItem('token');
 
-    if (!token) {
-        alert("ログインセッションが切れました。再ログインしてください。");
-        window.location.href = "./login.html";
-        return;
-    }
+    const token = getToken()
 
     try{
-        const response = await fetch(apiUrl, {
+        const response = await send_request({
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(task)
+            token: token,
+            body: task
         });
 
         const data = await response.json()
@@ -105,21 +127,13 @@ async function addTask(task){
 
 document.addEventListener("DOMContentLoaded", fetchAndDisplayTasks);
 async function fetchAndDisplayTasks(){
-    const token = localStorage.getItem('token');
 
-    if(!token){
-        alert("トークンがありません。ログインして下さい。");
-        window.location.href = "./login.html";
-        return;
-    }
+    const token = getToken()
 
     try{
-        const response = await fetch(apiUrl, {
+        const response = await send_request({
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+            token: token,
         });
 
         const tasks = await response.json();
@@ -137,6 +151,7 @@ async function fetchAndDisplayTasks(){
 }
 
 function displayTasks(tasks){
+
     const list = document.getElementById('taskList');
     list.innerHTML = '';
 
@@ -176,21 +191,15 @@ document.getElementById('taskList').addEventListener("click", async function(eve
 });
 
 async function deleteTask(taskId){
-    const token = localStorage.getItem("token");
 
-    if(!token){
-        alert("トークンを所有していません。ログインして下さい。");
-        window.location.href = "./login.html";
-        return;
-    }
+    const token = getToken();
 
     try{
-        const response = await fetch(`${apiUrl}/${taskId}`, {
+
+        const response = await send_request({
             method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+            token: token,
+            url: `${apiUrl}/${taskId}`
         });
 
         if(response.ok){
@@ -211,21 +220,15 @@ async function deleteTask(taskId){
 const updateButton = document.getElementById('updateButton');
 
 async function updateTask(taskId){
-    const token = localStorage.getItem("token");
-    if(!token){
-        alert("トークンがありません。ログインしてください");
-        window.location.href = "./login";
-        return;
-    }
+
+    const token = getToken()
 
     try{
-        const response_for_get = await fetch(`${apiUrl}/${taskId}`, {
-            method: 'GET',
-            headers:{
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
-        })
+        const response_for_get = await send_request({
+        method: 'GET',
+        token: token,
+        url: `${apiUrl}/${taskId}`
+        });
 
         if(!response_for_get.ok) {
             alert("タスク情報の取得に失敗しました");
@@ -286,10 +289,11 @@ async function updateTask(taskId){
 
 const updateTaskForm = document.getElementById('updateTaskForm');
 updateTaskForm.addEventListener('submit', async function(event){
+
     event.preventDefault();
 
     const taskId = document.getElementById('updateTaskId').value;
-    const token = localStorage.getItem('token');
+    const token = getToken();
 
     const taskData = {
         task_name: document.getElementById('updateTaskName').value,
@@ -299,13 +303,11 @@ updateTaskForm.addEventListener('submit', async function(event){
     };
 
     try {
-        const response = await fetch(`${apiUrl}/${taskId}`, {
+        const response = await send_request({
             method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(taskData)
+            token: token,
+            url: `${apiUrl}/${taskId}`,
+            body: taskData
         });
 
         if (response.ok) {
@@ -329,3 +331,28 @@ function cancelUpdate(taskId) {
         targetCard.style.display = 'block';
     }
 }
+
+const sortButton = document.getElementById('sortButton');
+sortButton.addEventListener("click", async function(event){
+    event.preventDefault();
+
+    const token = getToken();
+
+    try{
+        const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: `${apiUrl}?sort=asc`
+        })
+
+        if(response.ok){
+            const sorted_tasks = await response.json();
+            displayTasks(sorted_tasks)
+        }else{
+            const err = await response.json();
+            alert(err.detail || "タスクの更新に失敗しました");
+        }
+    }catch(error){
+        console.error('タスク並び替え中にエラーが発生しました', error);
+    }
+})
