@@ -7,6 +7,7 @@ from cruds.tasks import (
     modify_task,
     fetch_task,
     arrange_tasks,
+    filter_tasks,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
@@ -45,11 +46,15 @@ async def create_task(
 @router.get("/tasks", response_model=list[TaskSchema])
 async def get_tasks(
     sort: str | None = None,
+    search_name: str | None = None,
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
     if sort in ["deadline", "status"]:
         return await arrange_tasks(db_session, current_user.user_id, sort)
+
+    if search_name:
+        return await filter_tasks(db_session, current_user.user_id, search_name)
 
     return await fetch_tasks(db_session, current_user.user_id)
 

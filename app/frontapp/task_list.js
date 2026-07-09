@@ -383,13 +383,42 @@ sortStatus.addEventListener("click", async function(event){
         });
 
         if(response.ok){
-            const sorted_tasks = await response.json();
-            displayTasks(sorted_tasks);
+            const sortedTasks = await response.json();
+            displayTasks(sortedTasks);
         }else{
             const err = await response.json();
             alert(err.detail || "タスクの更新に失敗しました");
         }
     }catch(error){
         console.error('タスク並び替え中にエラーが発生しました', error);
+    }
+})
+
+const searchForm = document.getElementById('searchForm');
+
+searchForm.addEventListener("submit", async function(event){
+    event.preventDefault();
+
+    const token = getToken();
+
+    const searchName = document.getElementById('searchName')
+
+    try{
+        const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: `${apiUrl}?search_name=${searchName.value}`
+        });
+
+        if(response.ok){
+            const seachedtasks = await response.json();
+            console.log("バックエンドからのレスポンス:", seachedtasks);
+            displayTasks(seachedtasks);
+        }else{
+            const err = await response.json();
+            alert(err.detail || "タスクの更新に失敗しました");
+        }
+    }catch(error){
+        console.error('タスク検索中にエラーが発生しました', error);
     }
 })
