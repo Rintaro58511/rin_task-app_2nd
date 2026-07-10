@@ -271,7 +271,7 @@ async function updateTask(taskId){
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">タスク進捗</label>
+                        <label class="form-label" for="taskProgress">タスク進捗</label>
                         <div class="btn-group w-100" role="group">
                             <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusTodo">TODO</label>
@@ -283,7 +283,7 @@ async function updateTask(taskId){
                             <label class="btn btn-outline-warning" for="statusDone">DONE</label>
                         </div>
                         <div class="input-group mb-3">
-                            <input type="number" id="taskProgress" class="form-control" value="${task.task_progress}" min="0" max="100" step="1" required disabled>
+                            <input type="number" id="taskProgress" class="form-control" value="${task.task_progress}" min="0" max="100" step="1" required ${task.task_status !== 'IN_PROGRESS' ? 'disabled' : ''}>
                             <span class="input-group-text">%</span>
                         </div>
                     </div>
@@ -447,5 +447,3 @@ function toggleProgressInput() {
         }
     }
 }
-
-document.addEventListener('DOMContentLoaded', toggleProgressInput);
