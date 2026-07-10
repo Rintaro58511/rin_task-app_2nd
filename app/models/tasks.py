@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Text, UUID, Date, ForeignKey, Enum as SQLEnum
+from sqlalchemy import Text, UUID, Date, ForeignKey, Enum as SQLEnum, Integer
 import uuid
 from datetime import date
 from db import Base
@@ -24,3 +24,4 @@ class Task(Base):
     task_status: Mapped[TaskStatus] = mapped_column(
         SQLEnum(TaskStatus), default=TaskStatus.TODO, nullable=False
     )
+    task_progress: Mapped[int | None] = mapped_column(Integer, nullable=True)

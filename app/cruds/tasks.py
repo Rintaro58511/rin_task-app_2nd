@@ -44,6 +44,7 @@ async def modify_task(
     target_task.task_deadline = task.task_deadline
     target_task.task_detail = task.task_detail
     target_task.task_status = task.task_status
+    target_task.task_progress = task.task_progress
     await db_session.commit()
     await db_session.refresh(target_task)
 

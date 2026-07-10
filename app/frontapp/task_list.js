@@ -169,6 +169,9 @@ function displayTasks(tasks){
             <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3" style="width: 18rem;">
                     <div class="card-body">
+                        <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_progress}%"></div>
+                        </div>
                         <h5 class="card-title">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
                         <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status}</h6>
@@ -270,14 +273,18 @@ async function updateTask(taskId){
                     <div class="mb-3">
                         <label class="form-label">タスク進捗</label>
                         <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" checked>
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusTodo">TODO</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS" ${task.task_status === 'IN_PROGRESS' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusProgress">IN_PROGRESS</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE" ${task.task_status === 'DONE' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusDone">DONE</label>
+                        </div>
+                        <div class="input-group mb-3">
+                            <input type="number" id="taskProgress" class="form-control" value="${task.task_progress}" min="0" max="100" step="1" required disabled>
+                            <span class="input-group-text">%</span>
                         </div>
                     </div>
 
@@ -307,7 +314,8 @@ updateTaskForm.addEventListener('submit', async function(event){
         task_name: document.getElementById('updateTaskName').value,
         task_deadline: document.getElementById('updateTaskDeadline').value,
         task_detail: document.getElementById('updateTaskDetail').value,
-        task_status: document.querySelector('input[name="updateTaskStatus"]:checked').value
+        task_status: document.querySelector('input[name="updateTaskStatus"]:checked').value,
+        task_progress: document.getElementById('taskProgress').value
     };
 
     try {
@@ -416,9 +424,28 @@ searchForm.addEventListener("submit", async function(event){
             displayTasks(seachedtasks);
         }else{
             const err = await response.json();
-            alert(err.detail || "タスクの更新に失敗しました");
+            alert(err.detail || "タスクの検索に失敗しました");
         }
     }catch(error){
         console.error('タスク検索中にエラーが発生しました', error);
     }
 })
+
+function toggleProgressInput() {
+    const selectedStatus = document.querySelector('input[name="updateTaskStatus"]:checked').value;
+    const progressInput = document.getElementById('taskProgress');
+
+    if (selectedStatus === 'IN_PROGRESS') {
+        progressInput.disabled = false;
+    } else {
+        progressInput.disabled = true;
+        
+        if (selectedStatus === 'TODO') {
+            progressInput.value = 0;
+        } else if (selectedStatus === 'DONE') {
+            progressInput.value = 100;
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', toggleProgressInput);

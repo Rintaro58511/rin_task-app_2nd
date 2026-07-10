@@ -100,6 +100,7 @@ async def update_task(
         task_deadline=updated_task.task_deadline,
         task_detail=updated_task.task_detail,
         task_status=updated_task.task_status,
+        task_progress=updated_task.task_progress,
     )
     return ResponseSchema(message="タスクを更新しました", task=dict_task)
 

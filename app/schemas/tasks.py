@@ -9,6 +9,7 @@ class UpdateAndCreateTaskSchema(BaseModel):
     task_deadline: date = Field(..., example="2026-06-30")
     task_detail: str | None = Field(example="データの型の見直し")
     task_status: TaskStatus = Field(default=TaskStatus.TODO)
+    task_progress: int = Field(default=0)
 
 
 class TaskSchema(UpdateAndCreateTaskSchema):
