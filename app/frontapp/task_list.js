@@ -79,16 +79,16 @@ createTaskForm.addEventListener('submit', function(event){
 
     event.preventDefault();
 
-    const taskName = document.getElementById('taskName').value;
-    const taskDeadline = document.getElementById('taskDeadline').value;
-    const taskDetail = document.getElementById('taskDetail').value;
-    const selectedStatus = document.querySelector('input[name="taskStatus"]:checked').value;
 
     const taskData = {
-        task_name: taskName,
-        task_deadline: taskDeadline,
-        task_detail: taskDetail,
-        task_status: selectedStatus
+        task_name: document.getElementById('taskName').value,
+        task_deadline: document.getElementById('taskDeadline').value,
+        task_detail: document.getElementById('taskDetail').value,
+        task_status: {
+            task_progress: document.querySelector('input[name="taskStatus"]:checked').value,
+            progress_ratio: 0,
+            progress_comment: ""
+    }
     };
 
     addTask(taskData);
@@ -170,14 +170,15 @@ function displayTasks(tasks){
                 <div class="card mb-3" style="width: 18rem;">
                     <div class="card-body">
                         <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_progress}%"></div>
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%"></div>
                         </div>
                         <h5 class="card-title">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
-                        <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status}</h6>
+                        <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status.task_progress}</h6>
                         <p class="card-text">${task.task_detail}</p>
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
+                        <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
                     </div>
                 </div>
             </div>
@@ -273,19 +274,21 @@ async function updateTask(taskId){
                     <div class="mb-3">
                         <label class="form-label" for="taskProgress">タスク進捗</label>
                         <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status.task_progress === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusTodo">TODO</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS" ${task.task_status === 'IN_PROGRESS' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS" ${task.task_status.task_progress === 'IN_PROGRESS' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusProgress">IN_PROGRESS</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE" ${task.task_status === 'DONE' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE" ${task.task_status.task_progress === 'DONE' ? 'checked' : ''} onchange="toggleProgressInput()">
                             <label class="btn btn-outline-warning" for="statusDone">DONE</label>
                         </div>
                         <div class="input-group mb-3">
-                            <input type="number" id="taskProgress" class="form-control" value="${task.task_progress}" min="0" max="100" step="1" required ${task.task_status !== 'IN_PROGRESS' ? 'disabled' : ''}>
+                            <input type="number" id="progressRatio" class="form-control" value="${task.task_status.progress_ratio}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
                             <span class="input-group-text">%</span>
                         </div>
+                        <input type="text" id="progressComment" class="form-control" value="${task.task_status.progress_comment}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
+
                     </div>
 
                     <button type="submit" class="btn btn-warning w-100 mt-2">変更を保存</button>
@@ -311,12 +314,15 @@ updateTaskForm.addEventListener('submit', async function(event){
     const token = getToken();
 
     const taskData = {
-        task_name: document.getElementById('updateTaskName').value,
-        task_deadline: document.getElementById('updateTaskDeadline').value,
-        task_detail: document.getElementById('updateTaskDetail').value,
-        task_status: document.querySelector('input[name="updateTaskStatus"]:checked').value,
-        task_progress: document.getElementById('taskProgress').value
-    };
+    task_name: document.getElementById('updateTaskName').value,
+    task_deadline: document.getElementById('updateTaskDeadline').value,
+    task_detail: document.getElementById('updateTaskDetail').value,
+    task_status: {
+        task_progress: document.querySelector('input[name="updateTaskStatus"]:checked').value,
+        progress_ratio: document.getElementById('progressRatio').value,
+        progress_comment: document.getElementById('progressComment').value 
+    }
+};
 
     try {
         const response = await send_request({
@@ -434,11 +440,14 @@ searchForm.addEventListener("submit", async function(event){
 function toggleProgressInput() {
     const selectedStatus = document.querySelector('input[name="updateTaskStatus"]:checked').value;
     const progressInput = document.getElementById('taskProgress');
+    const commentInput = document.getElementById('progressComment');
 
     if (selectedStatus === 'IN_PROGRESS') {
         progressInput.disabled = false;
+        commentInput.disabled = false;
     } else {
         progressInput.disabled = true;
+        commentInput.disabled = true;
         
         if (selectedStatus === 'TODO') {
             progressInput.value = 0;
