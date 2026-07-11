@@ -3,6 +3,7 @@ from models.tasks import Task
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, case
 from uuid import UUID
+from datetime import datetime
 
 
 async def fetch_task(task_id: UUID, db_session: AsyncSession) -> Task:
@@ -26,6 +27,7 @@ async def add_task(
         task_name=task.task_name,
         task_deadline=task.task_deadline,
         task_detail=task.task_detail,
+        changed_time=task.changed_time,
         user_id=user_id,
         task_progress=task.task_status.task_progress,
         progress_ratio=task.task_status.progress_ratio,
@@ -52,6 +54,7 @@ async def modify_task(
     target_task.task_name = task.task_name
     target_task.task_deadline = task.task_deadline
     target_task.task_detail = task.task_detail
+    target_task.changed_itme = task.changed_time
     target_task.task_progress = task.task_status.task_progress
     target_task.progress_ratio = task.task_status.progress_ratio
     target_task.progress_comment = task.task_status.progress_comment

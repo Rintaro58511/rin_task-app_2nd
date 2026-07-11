@@ -1,7 +1,16 @@
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import Text, UUID, Date, ForeignKey, Enum as SQLEnum, Integer, String
+from sqlalchemy import (
+    Text,
+    UUID,
+    Date,
+    ForeignKey,
+    Enum as SQLEnum,
+    Integer,
+    String,
+    DateTime,
+)
 import uuid
-from datetime import date
+from datetime import date, datetime
 from db import Base
 from enums import TaskStatus
 
@@ -17,6 +26,7 @@ class Task(Base):
     )
     task_deadline: Mapped[date] = mapped_column(Date, nullable=False)
     task_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    changed_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID, ForeignKey("users.user_id"), nullable=False
     )

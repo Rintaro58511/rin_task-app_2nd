@@ -1,6 +1,21 @@
 const apiUrl = "http://localhost:8002/tasks"
 let currentSort = null;
 
+function getCreateAndUpdateTime(){
+    const now = new Date();
+
+    const year = now.getFullYear();
+    // 月・日・時・分・秒を常に2桁（01, 02...）に揃える
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const date = now.getDate().toString().padStart(2, '0');
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const seconds = now.getSeconds().toString().padStart(2, '0');
+
+    return `${year}-${month}-${date}T${hours}:${minutes}:${seconds}`
+
+}
+
 function getToken(){
     const token = localStorage.getItem('token');
 
@@ -79,11 +94,13 @@ createTaskForm.addEventListener('submit', function(event){
 
     event.preventDefault();
 
+    const createTime = getCreateAndUpdateTime();
 
     const taskData = {
         task_name: document.getElementById('taskName').value,
         task_deadline: document.getElementById('taskDeadline').value,
         task_detail: document.getElementById('taskDetail').value,
+        changed_time: createTime,
         task_status: {
             task_progress: document.querySelector('input[name="taskStatus"]:checked').value,
             progress_ratio: 0,
@@ -172,13 +189,14 @@ function displayTasks(tasks){
                         <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%"></div>
                         </div>
-                        <h5 class="card-title">${task.task_name}</h5>
+                        <h5 class="card-title mt-2">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
                         <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status.task_progress}</h6>
                         <p class="card-text">${task.task_detail}</p>
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
+                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${task.changed_time}</h6>
                     </div>
                 </div>
             </div>
@@ -233,7 +251,7 @@ const updateButton = document.getElementById('updateButton');
 
 async function updateTask(taskId){
 
-    const token = getToken()
+    const token = getToken();
 
     try{
         const response_for_get = await send_request({
@@ -287,7 +305,7 @@ async function updateTask(taskId){
                             <input type="number" id="progressRatio" class="form-control" value="${task.task_status.progress_ratio}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
                             <span class="input-group-text">%</span>
                         </div>
-                        <input type="text" id="progressComment" class="form-control" value="${task.task_status.progress_comment}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
+                        <input type="text" id="progressComment" class="form-control" value="${task.task_status.progress_comment}" ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
 
                     </div>
 
@@ -311,12 +329,14 @@ updateTaskForm.addEventListener('submit', async function(event){
     event.preventDefault();
 
     const taskId = document.getElementById('updateTaskId').value;
+    const updateTime = getCreateAndUpdateTime();
     const token = getToken();
 
     const taskData = {
     task_name: document.getElementById('updateTaskName').value,
     task_deadline: document.getElementById('updateTaskDeadline').value,
     task_detail: document.getElementById('updateTaskDetail').value,
+    changed_time: updateTime,
     task_status: {
         task_progress: document.querySelector('input[name="updateTaskStatus"]:checked').value,
         progress_ratio: document.getElementById('progressRatio').value,
@@ -439,7 +459,7 @@ searchForm.addEventListener("submit", async function(event){
 
 function toggleProgressInput() {
     const selectedStatus = document.querySelector('input[name="updateTaskStatus"]:checked').value;
-    const progressInput = document.getElementById('taskProgress');
+    const progressInput = document.getElementById('progressRatio');
     const commentInput = document.getElementById('progressComment');
 
     if (selectedStatus === 'IN_PROGRESS') {

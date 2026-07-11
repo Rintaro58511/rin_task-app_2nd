@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, computed_field
-from datetime import date
+from datetime import date, datetime
 import uuid
 from enums import TaskStatus
 
@@ -14,6 +14,7 @@ class UpdateAndCreateTaskSchema(BaseModel):
     task_name: str = Field(..., example="スキーマのコーディング")
     task_deadline: date = Field(..., example="2026-06-30")
     task_detail: str | None = Field(example="データの型の見直し")
+    changed_time: datetime = Field(default_factory=datetime.now)
     task_status: TaskStatusSchema = Field(
         ...,
         example="task_progress: IN_PROGRESS, progress_ratio: 50%, progress_comment: Statusスキーマの変更",

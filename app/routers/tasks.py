@@ -66,6 +66,7 @@ async def get_tasks(
             task_name=task.task_name,
             task_deadline=task.task_deadline,
             task_detail=task.task_detail,
+            changed_time=task.changed_time,
             task_status=task_status,
         )
         tasks_pydantic.append(task_pydantic)
@@ -127,6 +128,7 @@ async def search_task(
         task_name=task.task_name,
         task_deadline=task.task_deadline,
         task_detail=task.task_detail,
+        changed_time=task.changed_time,
         task_status=task_status,
     )
     return task_pydantic
