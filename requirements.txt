@@ -11,3 +11,5 @@ pydantic
 asyncpg
 pyjwt
 python-multipart
+pytest
+pytest-asyncio
