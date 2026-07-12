@@ -11,10 +11,6 @@
     <nav class="ps-1 pt-4 pb-1 mb-2 bg-primary text-white">
         <div class="d-flex align-items-center mb-4">
             <h2 class="mb-0 me-2">📝 タスクアプリ</h2>
-            <form class="d-flex" role="search" id="searchForm">
-                <input class="form-control me-2" type="search" placeholder="タスク名で検索" aria-label="Search" id="searchName"/>
-                <button class="btn btn-success text-nowrap" type="submit">検索</button>
-            </form>
             <div class="ms-auto">
                 <div class="d-flex gap-2 pe-3">
                     <div class="btn-group dropstart" role="group">
@@ -27,6 +23,10 @@
                         </ul>
                     </div>
                     <button type="button" class="btn btn-success me-md-2" id="addButton">タスク追加</button>
+                    <form class="d-flex" role="search" id="searchForm">
+                        <input class="form-control me-2" type="search" placeholder="タスク名で検索" aria-label="Search" id="searchName"/>
+                        <button class="btn btn-success text-nowrap" type="submit">検索</button>
+                    </form>
                 </div>
             </div>
         </div>
