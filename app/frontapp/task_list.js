@@ -1,11 +1,10 @@
 const apiUrl = "http://localhost:8002/tasks"
-let currentSort = null;
+let currentSort = localStorage.getItem('currentSort') || null;
 
 function getCreateAndUpdateTime(){
     const now = new Date();
 
     const year = now.getFullYear();
-    // 月・日・時・分・秒を常に2桁（01, 02...）に揃える
     const month = (now.getMonth() + 1).toString().padStart(2, '0');
     const date = now.getDate().toString().padStart(2, '0');
     const hours = now.getHours().toString().padStart(2, '0');
@@ -145,6 +144,8 @@ async function addTask(task){
 
 document.addEventListener("DOMContentLoaded", fetchAndDisplayTasks);
 async function fetchAndDisplayTasks(){
+
+    console.log(currentSort)
 
     const token = getToken()
 
@@ -379,6 +380,7 @@ sortDeadline.addEventListener("click", async function(event){
     event.preventDefault();
 
     currentSort = "deadline";
+    localStorage.setItem('currentSort', currentSort);
 
     const token = getToken();
 
@@ -386,7 +388,7 @@ sortDeadline.addEventListener("click", async function(event){
         const response = await send_request({
             method: 'GET',
             token: token,
-            url: `${apiUrl}?sort=deadline`
+            url: `${apiUrl}?sort=${currentSort}`
         });
 
         if(response.ok){
@@ -406,6 +408,7 @@ sortStatus.addEventListener("click", async function(event){
     event.preventDefault();
 
     currentSort = "status";
+    localStorage.setItem('currentSort', currentSort);
 
     const token = getToken();
 
@@ -413,7 +416,7 @@ sortStatus.addEventListener("click", async function(event){
         const response = await send_request({
             method: 'GET',
             token: token,
-            url: `${apiUrl}?sort=status`
+            url: `${apiUrl}?sort=${currentSort}`
         });
 
         if(response.ok){
