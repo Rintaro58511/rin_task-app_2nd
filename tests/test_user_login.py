@@ -49,7 +49,7 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
 
 
 @pytest.mark.anyio
-async def test_signup_user_db_error(monkeypatch, override_get_db):
+async def test_login_failure(monkeypatch, override_get_db):
     async def mock_authenticate_user_fail(user, password, db):
         return None
 
