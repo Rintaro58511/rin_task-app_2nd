@@ -16,7 +16,6 @@ async def fetch_user_by_email(email: str, db_session: AsyncSession) -> User:
 
 
 async def add_user(user: UserInDB, db_session: AsyncSession) -> User:
-    print(f"--- スケマから届いた直後のパスワード: {user.hashed_password} ---")
     hashed = password_hash.hash(user.hashed_password)
     user.hashed_password = hashed
     new_user = User(**user.model_dump())
