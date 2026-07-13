@@ -46,3 +46,27 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
     assert "access_token" in body
 
     assert body["token_type"] == "bearer"
+
+
+@pytest.mark.anyio
+async def test_signup_user_db_error(monkeypatch, override_get_db):
+    async def mock_authenticate_user_fail(user, password, db):
+        return None
+
+    monkeypatch.setattr(user, "authenticate_user", mock_authenticate_user_fail)
+
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as ac:
+        response = await ac.post(
+            "/user/token",
+            data={
+                "username": "test@test.com",
+                "password": "dummy_password",
+            },
+        )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    body = response.json()
+    assert body["detail"] == "Incorrect username or password"
+    assert response.headers.get("WWW-Authenticate") == "Bearer"
