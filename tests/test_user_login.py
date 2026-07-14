@@ -68,5 +68,5 @@ async def test_login_failure(monkeypatch, override_get_db):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     body = response.json()
-    assert body["detail"] == "Incorrect username or password"
+    assert body["detail"] == "入力した内容に誤りがあります"
     assert response.headers.get("WWW-Authenticate") == "Bearer"

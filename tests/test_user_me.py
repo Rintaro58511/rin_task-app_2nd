@@ -67,5 +67,5 @@ async def test_get_my_info_failure(monkeypatch, override_get_db):
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     body = response.json()
-    assert body["detail"] == "Could not validate credentials"
+    assert body["detail"] == "認証に失敗しました"
     assert response.headers.get("WWW-Authenticate") == "Bearer"
