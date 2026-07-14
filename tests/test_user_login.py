@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 import db
 import pytest
 import uuid
-from fastapi import HTTPException, status
+from fastapi import status
 
 
 @pytest.fixture
