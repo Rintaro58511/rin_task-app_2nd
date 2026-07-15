@@ -8,7 +8,6 @@ from cruds import user
 from cruds.user import fetch_user_by_email, add_user, authenticate_user
 from models.user import User
 from schemas.user import UserInDB
-from pwdlib import PasswordHash
 
 
 @pytest.mark.anyio
