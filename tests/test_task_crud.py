@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime, date
 
 from cruds import tasks
-from cruds.tasks import fetch_task, fetch_tasks, add_task, remove_task
+from cruds.tasks import fetch_task, fetch_tasks, add_task, remove_task, modify_task
 from models.tasks import Task
 from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
@@ -159,8 +159,70 @@ async def test_remove_task(monkeypatch):
     mock_db.commit.assert_called_once()
 
 
-# async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
-#     target_task = await fetch_task(task_id, db_session)
-#     if target_task:
-#         await db_session.delete(target_task)
-#         await db_session.commit()
+@pytest.mark.anyio
+async def test_modify_task():
+    mock_db = AsyncMock()
+
+    task_id = uuid.uuid4()
+    user_id = uuid.uuid4()
+    target_task = Task(
+        task_id=task_id,
+        task_name="test_task",
+        task_deadline=date(2026, 8, 1),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    assert target_task.task_name == "test_task"
+    assert target_task.task_deadline == date(2026, 8, 1)
+    assert target_task.task_progress == TaskStatus.IN_PROGRESS
+    assert target_task.progress_ratio == 90
+    assert target_task.progress_comment == "終わりそう"
+
+    status_data = TaskStatusSchema(
+        task_progress=TaskStatus.DONE,
+        progress_ratio=100,
+        progress_comment="終わった",
+    )
+
+    expected_task = UpdateAndCreateTaskSchema(
+        task_name="test_task2",
+        task_deadline=date(2026, 8, 2),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        task_status=status_data,
+    )
+
+    returned_task = await modify_task(expected_task, target_task, mock_db)
+
+    assert returned_task.task_name == "test_task2"
+    assert returned_task.task_deadline == date(2026, 8, 2)
+    assert returned_task.task_progress == TaskStatus.DONE
+    assert returned_task.progress_ratio == 100
+    assert returned_task.progress_comment == "終わった"
+
+    mock_db.commit.assert_called_once()
+    mock_db.refresh.assert_called_once()
+
+
+# async def modify_task(
+#     task: UpdateAndCreateTaskSchema, target_task: Task, db_session: AsyncSession
+# ) -> Task:
+
+#     target_task.task_name = task.task_name
+#     target_task.task_deadline = task.task_deadline
+#     target_task.task_detail = task.task_detail
+#     target_task.changed_itme = task.changed_time
+#     target_task.task_progress = task.task_status.task_progress
+#     target_task.progress_ratio = task.task_status.progress_ratio
+#     target_task.progress_comment = task.task_status.progress_comment
+
+#     await db_session.commit()
+#     await db_session.refresh(target_task)
+
+#     return target_task
