@@ -5,7 +5,15 @@ import uuid
 from datetime import datetime, date
 
 from cruds import tasks
-from cruds.tasks import fetch_task, fetch_tasks, add_task, remove_task, modify_task
+from cruds.tasks import (
+    fetch_task,
+    fetch_tasks,
+    add_task,
+    remove_task,
+    modify_task,
+    arrange_tasks,
+    filter_tasks,
+)
 from models.tasks import Task
 from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
@@ -210,19 +218,135 @@ async def test_modify_task():
     mock_db.refresh.assert_called_once()
 
 
-# async def modify_task(
-#     task: UpdateAndCreateTaskSchema, target_task: Task, db_session: AsyncSession
-# ) -> Task:
+@pytest.mark.anyio
+async def test_arrange_tasks():
 
-#     target_task.task_name = task.task_name
-#     target_task.task_deadline = task.task_deadline
-#     target_task.task_detail = task.task_detail
-#     target_task.changed_itme = task.changed_time
-#     target_task.task_progress = task.task_status.task_progress
-#     target_task.progress_ratio = task.task_status.progress_ratio
-#     target_task.progress_comment = task.task_status.progress_comment
+    mock_db = AsyncMock()
+    user_id = uuid.uuid4()
 
-#     await db_session.commit()
-#     await db_session.refresh(target_task)
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+    mock_scalars = MagicMock()
+    mock_results.scalars.return_value = mock_scalars
 
-#     return target_task
+    task_done = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_task2",
+        task_deadline=date(2026, 8, 3),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_in_progress = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_task",
+        task_deadline=date(2026, 8, 1),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_todo = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_task2",
+        task_deadline=date(2026, 8, 2),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.TODO,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    mock_scalars.all.return_value = [task_in_progress, task_todo, task_done]
+
+    sort_order = "deadline"
+    sorted_by_deadline_tasks = await arrange_tasks(mock_db, user_id, sort_order)
+
+    assert sorted_by_deadline_tasks[0].task_deadline == date(2026, 8, 1)
+    assert sorted_by_deadline_tasks[1].task_deadline == date(2026, 8, 2)
+    assert sorted_by_deadline_tasks[2].task_deadline == date(2026, 8, 3)
+
+    mock_scalars.all.return_value = [task_todo, task_in_progress, task_done]
+
+    sort_order = "status"
+    sorted_by_status_tasks = await arrange_tasks(mock_db, user_id, sort_order)
+
+    assert sorted_by_status_tasks[0].task_progress == TaskStatus.TODO
+    assert sorted_by_status_tasks[1].task_progress == TaskStatus.IN_PROGRESS
+    assert sorted_by_status_tasks[2].task_progress == TaskStatus.DONE
+
+    assert mock_db.execute.call_count == 2
+
+    assert mock_results.scalars.call_count == 2
+
+    assert mock_scalars.all.call_count == 2
+
+
+@pytest.mark.anyio
+async def test_filter_tasks():
+    mock_db = AsyncMock()
+
+    user_id = uuid.uuid4()
+
+    task_python = Task(
+        task_id=uuid.uuid4(),
+        task_name="python",
+        task_deadline=date(2026, 8, 3),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_python_test = Task(
+        task_id=uuid.uuid4(),
+        task_name="python_test",
+        task_deadline=date(2026, 8, 1),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_java = Task(
+        task_id=uuid.uuid4(),
+        task_name="java",
+        task_deadline=date(2026, 8, 2),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.TODO,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+    mock_scalars = MagicMock()
+    mock_results.scalars.return_value = mock_scalars
+
+    mock_scalars.all.return_value = [task_python, task_python_test]
+
+    filtered_tasks = await filter_tasks(mock_db, user_id, "python")
+
+    assert len(filtered_tasks) == 2
+    assert filtered_tasks[0].task_name == "python"
+    assert filtered_tasks[1].task_name == "python_test"
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.scalars.assert_called_once()
+    mock_scalars.all.assert_called_once()
