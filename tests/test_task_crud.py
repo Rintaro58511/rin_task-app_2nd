@@ -12,6 +12,7 @@ from cruds.tasks import (
     remove_task,
     modify_task,
     arrange_tasks,
+    filter_tasks,
 )
 from models.tasks import Task
 from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
@@ -290,21 +291,75 @@ async def test_arrange_tasks():
     assert mock_scalars.all.call_count == 2
 
 
-# async def arrange_tasks(
-#     db_session: AsyncSession, user_id: UUID, sort_order: str
-# ) -> list[Task]:
-#     stmt = select(Task).where(Task.user_id == user_id)
+@pytest.mark.anyio
+async def test_filter_tasks():
+    mock_db = AsyncMock()
 
-#     if sort_order == "deadline":
-#         stmt = stmt.order_by(Task.task_deadline.asc(), Task.task_progress.asc())
-#     if sort_order == "status":
-#         status_order = case(
-#             (Task.task_progress == "TODO", 1),
-#             (Task.task_progress == "IN_PROGRESS", 2),
-#             (Task.task_progress == "DONE", 3),
-#             else_=4,
-#         )
-#         stmt = stmt.order_by(status_order, Task.task_deadline.asc())
+    user_id = uuid.uuid4()
+
+    task_python = Task(
+        task_id=uuid.uuid4(),
+        task_name="python",
+        task_deadline=date(2026, 8, 3),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_python_test = Task(
+        task_id=uuid.uuid4(),
+        task_name="python_test",
+        task_deadline=date(2026, 8, 1),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_java = Task(
+        task_id=uuid.uuid4(),
+        task_name="java",
+        task_deadline=date(2026, 8, 2),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.TODO,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+    mock_scalars = MagicMock()
+    mock_results.scalars.return_value = mock_scalars
+
+    mock_scalars.all.return_value = [task_python, task_python_test]
+
+    filtered_tasks = await filter_tasks(mock_db, user_id, "python")
+
+    assert len(filtered_tasks) == 2
+    assert filtered_tasks[0].task_name == "python"
+    assert filtered_tasks[1].task_name == "python_test"
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.scalars.assert_called_once()
+    mock_scalars.all.assert_called_once()
+
+
+# async def filter_tasks(
+#     db_session: AsyncSession, user_id: UUID, search_name: str
+# ) -> list[Task]:
+#     print(f"{search_name}でdbを検索")
+#     stmt = select(Task).where(
+#         Task.user_id == user_id, Task.task_name.like(f"%{search_name}%")
+#     )
 
 #     result = await db_session.execute(stmt)
+
 #     return list(result.scalars().all())
