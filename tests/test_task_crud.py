@@ -350,16 +350,3 @@ async def test_filter_tasks():
     mock_db.execute.assert_awaited_once()
     mock_results.scalars.assert_called_once()
     mock_scalars.all.assert_called_once()
-
-
-# async def filter_tasks(
-#     db_session: AsyncSession, user_id: UUID, search_name: str
-# ) -> list[Task]:
-#     print(f"{search_name}でdbを検索")
-#     stmt = select(Task).where(
-#         Task.user_id == user_id, Task.task_name.like(f"%{search_name}%")
-#     )
-
-#     result = await db_session.execute(stmt)
-
-#     return list(result.scalars().all())
