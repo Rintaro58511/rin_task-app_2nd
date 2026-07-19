@@ -24,13 +24,6 @@ class UpdateAndCreateTaskSchema(BaseModel):
 class TaskSchema(UpdateAndCreateTaskSchema):
     task_id: uuid.UUID = Field(...)
 
-    @property
-    @computed_field
-    def is_expired(self) -> bool:
-        return self.task_deadline < date.today()
-
-    model_config = {"from_attributes": True}
-
 
 class ResponseSchema(BaseModel):
     message: str = Field(..., description="操作に対するメッセージが入ります")

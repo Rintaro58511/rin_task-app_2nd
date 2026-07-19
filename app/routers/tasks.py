@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import db
 from uuid import UUID
 from routers.user import get_current_user
+from datetime import date
 
 router = APIRouter()
 
@@ -30,6 +31,8 @@ async def create_task(
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
+    if task.task_deadline < date.today():
+        raise HTTPException(status_code=400, detail="期限が過去の日付になっています")
 
     try:
         await add_task(task, db_session, current_user.user_id)
@@ -96,12 +99,18 @@ async def update_task(
     db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
 ):
+
     target_task = await fetch_task(task_id, db_session)
+
+    if task.task_deadline < date.today():
+        raise HTTPException(status_code=400, detail="期限が過去の日付になっています")
     if target_task is None:
         raise HTTPException(status_code=400, detail="指定されたタスクが存在しません。")
     if target_task.user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
+
     await modify_task(task, target_task, db_session)
+
     return ResponseSchema(message="タスクを更新しました")
 
 
