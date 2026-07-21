@@ -106,7 +106,6 @@ async def test_fail_db_create_task(
     dummy_user_id = uuid.uuid4()
     dummy_task_id = uuid.uuid4()
 
-    # 1. 認証ユーザーのIDを設定
     async def mock_current_user():
         mock_user = AsyncMock()
         mock_user.user_id = dummy_user_id
