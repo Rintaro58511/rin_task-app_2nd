@@ -1,19 +1,40 @@
-from schemas.tasks import TaskSchema, UpdateAndCreateTaskSchema
+from schemas.tasks import UpdateAndCreateTaskSchema
 from models.tasks import Task
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, case
 from uuid import UUID
-from datetime import datetime
 
 
 async def fetch_task(task_id: UUID, db_session: AsyncSession) -> Task:
+    """
+    タスク情報をタスクのIDを元にデータベースから探す
+
+    Args
+        task_id(UUID): 探したいタスクのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    Return
+        Task: 探したいタスクの情報
+
+    """
     result = await db_session.execute(select(Task).filter(Task.task_id == task_id))
     target_task = result.scalars().first()
 
     return target_task
 
 
-async def fetch_tasks(db_session: AsyncSession, user_id: UUID) -> list[Task]:
+async def fetch_tasks(user_id: UUID, db_session: AsyncSession) -> list[Task]:
+    """
+    ユーザーが持っている全てのタスク情報をデータベースから探す
+
+    Args
+        user_id(UUID): ログイン中のユーザーのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    Return
+        list[Task]: ユーザーが所有するタスクリスト
+
+    """
     results = await db_session.execute(select(Task).where(Task.user_id == user_id))
     target_tasks = results.scalars().all()
 
@@ -21,8 +42,17 @@ async def fetch_tasks(db_session: AsyncSession, user_id: UUID) -> list[Task]:
 
 
 async def add_task(
-    task: UpdateAndCreateTaskSchema, db_session: AsyncSession, user_id: UUID
-) -> Task:
+    task: UpdateAndCreateTaskSchema, user_id: UUID, db_session: AsyncSession
+) -> None:
+    """
+    データベースにタスクを追加する
+
+    Args
+        task(UpdateAndCreateTaskSchema): タスク追加フォームに入力された内容
+        user_id(UUID): ログイン中のユーザーのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    """
     new_task = Task(
         task_name=task.task_name,
         task_deadline=task.task_deadline,
@@ -33,15 +63,23 @@ async def add_task(
         progress_ratio=task.task_status.progress_ratio,
         progress_comment=task.task_status.progress_comment,
     )
+
     db_session.add(new_task)
     await db_session.commit()
     await db_session.refresh(new_task)
 
-    return new_task
-
 
 async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
+    """
+    引数のタスクIDと一致したタスクを削除する
+
+    Args
+        task_id(UUID): 削除したいタスクのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    """
     target_task = await fetch_task(task_id, db_session)
+
     if target_task:
         await db_session.delete(target_task)
         await db_session.commit()
@@ -50,11 +88,23 @@ async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
 async def modify_task(
     task: UpdateAndCreateTaskSchema, target_task: Task, db_session: AsyncSession
 ) -> Task:
+    """
+    データベースのタスク情報を更新する
+
+    Args
+        task(UpdateAndCreateTaskSchema): タスク変更フォームに入力された内容
+        target_task(Task): 変更したいタスクの情報
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    Return
+        Task: 変更後のタスクの内容
+
+    """
 
     target_task.task_name = task.task_name
     target_task.task_deadline = task.task_deadline
     target_task.task_detail = task.task_detail
-    target_task.changed_itme = task.changed_time
+    target_task.changed_time = task.changed_time
     target_task.task_progress = task.task_status.task_progress
     target_task.progress_ratio = task.task_status.progress_ratio
     target_task.progress_comment = task.task_status.progress_comment
@@ -66,8 +116,20 @@ async def modify_task(
 
 
 async def arrange_tasks(
-    db_session: AsyncSession, user_id: UUID, sort_order: str
+    sort_order: str, user_id: UUID, db_session: AsyncSession
 ) -> list[Task]:
+    """
+    sort_orderに応じてタスクを並び替える
+
+    Args
+        sort_order(str): ソートの方式
+        user_id(UUID): ログイン中のユーザーのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    Return
+        list[Task]: 並び替えたタスクのリスト
+
+    """
     stmt = select(Task).where(Task.user_id == user_id)
 
     if sort_order == "deadline":
@@ -86,9 +148,20 @@ async def arrange_tasks(
 
 
 async def filter_tasks(
-    db_session: AsyncSession, user_id: UUID, search_name: str
+    search_name: str, user_id: UUID, db_session: AsyncSession
 ) -> list[Task]:
-    print(f"{search_name}でdbを検索")
+    """
+    タスクの検索結果に応じてタスクを絞り込む
+
+    Args
+        search_name(str): 検索ワード
+        user_id(UUID): ログイン中のユーザーのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+
+    Return
+        list[Task]: 検索ワードで絞ったタスクのリスト
+
+    """
     stmt = select(Task).where(
         Task.user_id == user_id, Task.task_name.like(f"%{search_name}%")
     )

@@ -27,8 +27,8 @@ async def fetch_user_by_email(email: str, db_session: AsyncSession) -> User:
 
 async def add_user(user: UserInDB, db_session: AsyncSession) -> User:
     """
-    ユーザー情報をデータベースに追加する。
-    パスワードのハッシュ化はここで行う。
+    ユーザー情報をデータベースに追加する
+    パスワードのハッシュ化はここで行う
 
     Args
         user(UserInDB): データベースに登録するのに必要なユーザーの情報
@@ -38,9 +38,11 @@ async def add_user(user: UserInDB, db_session: AsyncSession) -> User:
         User: 追加したユーザー情報
     """
     hashed_password = password_hash.hash(user.hashed_password)
+
     user_data = user.model_dump()
     user_data["hashed_password"] = hashed_password
     new_user = User(**user_data)
+
     db_session.add(new_user)
     await db_session.commit()
     await db_session.refresh(new_user)
@@ -52,19 +54,22 @@ async def authenticate_user(
     email: str, password: str, db_session: AsyncSession
 ) -> User:
     """
-    ログイン情報（メールアドレス・パスワード）の検証を行う。
+    ログイン情報（メールアドレス・パスワード）の検証を行う
 
     Args
         email(str): ログインフォームに入力されたメールアドレス
-        password: ログインフォームに入力された平文パスワード。
+        password: ログインフォームに入力された平文パスワード
         db_session(AsyncSession): データベースの接続動作の依存性注入
 
     Return
         User | None: データベースに登録されているユーザー
     """
     logining_user = await fetch_user_by_email(email, db_session)
+
     if logining_user is None:
         return None
+
     if not password_hash.verify(password, logining_user.hashed_password):
         return None
+
     return logining_user
