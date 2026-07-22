@@ -28,36 +28,71 @@ router = APIRouter()
 )
 async def create_task(
     task: UpdateAndCreateTaskSchema,
-    db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
-):
+    db_session: AsyncSession = Depends(db.get_db_session),
+) -> ResponseSchema:
+    """タスクの追加を行い、結果メッセージを返す"""
+
     if task.task_deadline < date.today():
         raise HTTPException(status_code=400, detail="期限が過去の日付になっています")
 
     try:
-        await add_task(task, db_session, current_user.user_id)
+        await add_task(task, current_user.user_id, db_session)
         return ResponseSchema(message="タスク追加ができました")
-    except Exception as e:
-        import traceback
+    except Exception:
+        raise HTTPException(status_code=400, detail="タスクの登録に失敗しました")
 
-        traceback.print_exc()
-        raise HTTPException(status_code=400, detail="タスクの登録に失敗しました。")
+
+@router.get("/tasks/{task_id}", response_model=TaskSchema)
+async def search_task(
+    task_id: UUID,
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(db.get_db_session),
+) -> TaskSchema:
+    """指定されたIDのタスク詳細を取得する"""
+
+    task = await fetch_task(task_id, db_session)
+
+    if task is None:
+        raise HTTPException(status_code=404, detail="指定されたタスクが見つかりません")
+    if task.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
+
+    task_status = TaskStatusSchema(
+        task_progress=task.task_progress,
+        progress_ratio=task.progress_ratio,
+        progress_comment=task.progress_comment,
+    )
+    task_pydantic = TaskSchema(
+        task_id=task.task_id,
+        task_name=task.task_name,
+        task_deadline=task.task_deadline,
+        task_detail=task.task_detail,
+        changed_time=task.changed_time,
+        task_status=task_status,
+    )
+
+    return task_pydantic
 
 
 @router.get("/tasks", response_model=list[TaskSchema])
 async def get_tasks(
     sort: str | None = None,
     search_name: str | None = None,
-    db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
-):
+    db_session: AsyncSession = Depends(db.get_db_session),
+) -> list[TaskSchema]:
+    """ソートや絞り込み条件に応じて、ログインユーザーのタスク一覧を取得する"""
+
     if sort in ["deadline", "status"]:
-        tasks = await arrange_tasks(db_session, current_user.user_id, sort)
+        tasks = await arrange_tasks(sort, current_user.user_id, db_session)
     elif search_name:
-        tasks = await filter_tasks(db_session, current_user.user_id, search_name)
+        tasks = await filter_tasks(search_name, current_user.user_id, db_session)
     else:
-        tasks = await fetch_tasks(db_session, current_user.user_id)
+        tasks = await fetch_tasks(current_user.user_id, db_session)
+
     tasks_pydantic = []
+
     for task in tasks:
         task_status = TaskStatusSchema(
             task_progress=task.task_progress,
@@ -77,67 +112,43 @@ async def get_tasks(
     return tasks_pydantic
 
 
-@router.delete("/tasks/{task_id}", response_model=ResponseSchema)
-async def delete_task(
-    task_id: UUID,
-    db_session: AsyncSession = Depends(db.get_db_session),
-    current_user=Depends(get_current_user),
-):
-    deleted_task = await fetch_task(task_id, db_session)
-    if deleted_task is None:
-        raise HTTPException(status_code=400, detail="タスクの削除に失敗しました。")
-    if deleted_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
-    await remove_task(task_id, db_session)
-    return ResponseSchema(message="タスクを削除しました")
-
-
 @router.put("/tasks/{task_id}", response_model=ResponseSchema)
 async def update_task(
     task_id: UUID,
     task: UpdateAndCreateTaskSchema,
-    db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
-):
+    db_session: AsyncSession = Depends(db.get_db_session),
+) -> ResponseSchema:
+    """指定されたIDのタスク情報を更新する"""
 
     target_task = await fetch_task(task_id, db_session)
 
     if task.task_deadline < date.today():
         raise HTTPException(status_code=400, detail="期限が過去の日付になっています")
     if target_task is None:
-        raise HTTPException(status_code=400, detail="指定されたタスクが存在しません。")
+        raise HTTPException(status_code=400, detail="指定されたタスクが存在しません")
     if target_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
+        raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
 
     await modify_task(task, target_task, db_session)
 
     return ResponseSchema(message="タスクを更新しました")
 
 
-@router.get("/tasks/{task_id}", response_model=TaskSchema)
-async def search_task(
+@router.delete("/tasks/{task_id}", response_model=ResponseSchema)
+async def delete_task(
     task_id: UUID,
-    db_session: AsyncSession = Depends(db.get_db_session),
     current_user=Depends(get_current_user),
-):
-    task = await fetch_task(task_id, db_session)
-    if task is None:
-        raise HTTPException(
-            status_code=404, detail="指定されたタスクが見つかりません。"
-        )
-    if task.user_id != current_user.user_id:
-        raise HTTPException(status_code=403, detail="他ユーザーのタスクです。")
-    task_status = TaskStatusSchema(
-        task_progress=task.task_progress,
-        progress_ratio=task.progress_ratio,
-        progress_comment=task.progress_comment,
-    )
-    task_pydantic = TaskSchema(
-        task_id=task.task_id,
-        task_name=task.task_name,
-        task_deadline=task.task_deadline,
-        task_detail=task.task_detail,
-        changed_time=task.changed_time,
-        task_status=task_status,
-    )
-    return task_pydantic
+    db_session: AsyncSession = Depends(db.get_db_session),
+) -> ResponseSchema:
+    """指定されたIDのタスクを削除する"""
+
+    deleted_task = await fetch_task(task_id, db_session)
+
+    if deleted_task is None:
+        raise HTTPException(status_code=404, detail="指定されたタスクが見つかりません")
+    if deleted_task.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
+    await remove_task(task_id, db_session)
+
+    return ResponseSchema(message="タスクを削除しました")
