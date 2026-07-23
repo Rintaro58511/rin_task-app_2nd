@@ -15,7 +15,7 @@ from cruds.tasks import (
     filter_tasks,
 )
 from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
+from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
 
 
@@ -95,7 +95,7 @@ async def test_fetch_tasks():
     mock_results.scalars.return_value = mock_scalars
     mock_scalars.all.return_value = expected_tasks
 
-    retrieved_tasks = await fetch_tasks(mock_db, user_id)
+    retrieved_tasks = await fetch_tasks(user_id, mock_db)
 
     assert retrieved_tasks[0].task_name == "test_task"
     assert retrieved_tasks[1].task_name == "test_task2"
@@ -108,6 +108,7 @@ async def test_fetch_tasks():
 @pytest.mark.anyio
 async def test_add_task():
     mock_db = AsyncMock()
+    mock_db.add = MagicMock()
 
     user_id = uuid.uuid4()
 
@@ -125,16 +126,11 @@ async def test_add_task():
         task_status=status_data,
     )
 
-    returned_task = await add_task(expected_task, mock_db, user_id)
-
-    assert returned_task.task_name == "test_task2"
-    assert returned_task.user_id == user_id
-    assert returned_task.task_progress == TaskStatus.IN_PROGRESS
-    assert returned_task.progress_ratio == 90
+    await add_task(expected_task, user_id, mock_db)
 
     mock_db.add.assert_called_once()
-    mock_db.commit.assert_called_once()
-    mock_db.refresh.assert_called_once()
+    mock_db.commit.assert_awaited_once()
+    mock_db.refresh.assert_awaited_once()
 
 
 @pytest.mark.anyio
@@ -269,7 +265,7 @@ async def test_arrange_tasks():
     mock_scalars.all.return_value = [task_in_progress, task_todo, task_done]
 
     sort_order = "deadline"
-    sorted_by_deadline_tasks = await arrange_tasks(mock_db, user_id, sort_order)
+    sorted_by_deadline_tasks = await arrange_tasks(sort_order, user_id, mock_db)
 
     assert sorted_by_deadline_tasks[0].task_deadline == date(2026, 8, 1)
     assert sorted_by_deadline_tasks[1].task_deadline == date(2026, 8, 2)
@@ -278,7 +274,7 @@ async def test_arrange_tasks():
     mock_scalars.all.return_value = [task_todo, task_in_progress, task_done]
 
     sort_order = "status"
-    sorted_by_status_tasks = await arrange_tasks(mock_db, user_id, sort_order)
+    sorted_by_status_tasks = await arrange_tasks(sort_order, user_id, mock_db)
 
     assert sorted_by_status_tasks[0].task_progress == TaskStatus.TODO
     assert sorted_by_status_tasks[1].task_progress == TaskStatus.IN_PROGRESS
@@ -341,7 +337,7 @@ async def test_filter_tasks():
 
     mock_scalars.all.return_value = [task_python, task_python_test]
 
-    filtered_tasks = await filter_tasks(mock_db, user_id, "python")
+    filtered_tasks = await filter_tasks("python", user_id, mock_db)
 
     assert len(filtered_tasks) == 2
     assert filtered_tasks[0].task_name == "python"

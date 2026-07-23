@@ -35,6 +35,8 @@ async def test_fetch_user_by_email():
 @pytest.mark.anyio
 async def test_add_user():
     mock_db = AsyncMock()
+    mock_db.add = MagicMock()
+
     user_id = uuid.uuid4()
     expected_user = UserInDB(
         user_id=user_id,
@@ -49,8 +51,8 @@ async def test_add_user():
     assert returned_user.email == "test@test.com"
 
     mock_db.add.assert_called_once()
-    mock_db.commit.assert_called_once()
-    mock_db.refresh.assert_called_once()
+    mock_db.commit.assert_awaited_once()
+    mock_db.refresh.assert_awaited_once()
 
 
 @pytest.mark.anyio

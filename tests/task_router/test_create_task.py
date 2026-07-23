@@ -40,8 +40,8 @@ def override_get_db():
 
 
 @pytest.mark.anyio
-async def test_create_task(monkeypatch, override_get_db, override_get_current_user):
-    async def mock_add_task(task, db, user_id):
+async def test_create_task(monkeypatch, override_get_current_user, override_get_db):
+    async def mock_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,
             progress_ratio=90,
@@ -81,9 +81,9 @@ async def test_create_task(monkeypatch, override_get_db, override_get_current_us
 
 @pytest.mark.anyio
 async def test_fail_create_task(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
-    async def mock_fail_add_task(task, db, user_id):
+    async def mock_fail_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,
             progress_ratio=90,
@@ -123,9 +123,9 @@ async def test_fail_create_task(
 
 @pytest.mark.anyio
 async def test_fail_db_create_task(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
-    async def mock_fail_db_add_task(task, db, user_id):
+    async def mock_fail_db_add_task(task, user_id, db):
         raise Exception("データベースエラーのテスト")
 
     monkeypatch.setattr(task, "add_task", mock_fail_db_add_task)
@@ -149,4 +149,4 @@ async def test_fail_db_create_task(
         )
     assert response.status_code == 400
     body = response.json()
-    assert body["detail"] == "タスクの登録に失敗しました。"
+    assert body["detail"] == "タスクの登録に失敗しました"

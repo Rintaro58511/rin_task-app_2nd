@@ -7,9 +7,7 @@ from main import app
 import uuid
 from datetime import datetime, date
 from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
-from fastapi import status
 import db
 
 
@@ -40,8 +38,8 @@ def override_get_db():
 
 
 @pytest.mark.anyio
-async def test_get_row_tasks(monkeypatch, override_get_db, override_get_current_user):
-    async def mock_fetch_tasks(db, user_id):
+async def test_get_row_tasks(monkeypatch, override_get_current_user, override_get_db):
+    async def mock_fetch_tasks(user_id, db):
         mock_tasks = [
             Task(
                 task_id=uuid.uuid4(),
@@ -101,9 +99,9 @@ async def test_get_row_tasks(monkeypatch, override_get_db, override_get_current_
 
 @pytest.mark.anyio
 async def test_get_sorted_deadline_tasks(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
-    async def mock_arrange_tasks(db, user_id, sort):
+    async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
                 task_id=uuid.uuid4(),
@@ -163,9 +161,9 @@ async def test_get_sorted_deadline_tasks(
 
 @pytest.mark.anyio
 async def test_get_sorted_status_tasks(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
-    async def mock_arrange_tasks(db, user_id, sort):
+    async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
                 task_id=uuid.uuid4(),
@@ -225,9 +223,9 @@ async def test_get_sorted_status_tasks(
 
 @pytest.mark.anyio
 async def test_get_filtered_tasks(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
-    async def mock_filter_tasks(db, user_id, search_name):
+    async def mock_filter_tasks(search_name, user_id, db):
         mock_tasks = [
             Task(
                 task_id=uuid.uuid4(),
