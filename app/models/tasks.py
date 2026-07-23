@@ -16,6 +16,8 @@ from enums import TaskStatus
 
 
 class Task(Base):
+    """タスク情報を管理するテーブルモデル。"""
+
     __tablename__ = "tasks"
     task_id: Mapped[uuid.UUID] = mapped_column(
         UUID, primary_key=True, default=uuid.uuid4
