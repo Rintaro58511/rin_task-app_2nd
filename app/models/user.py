@@ -6,6 +6,8 @@ from db import Base
 
 
 class User(Base):
+    """ユーザーの情報を管理するテーブル"""
+
     __tablename__ = "users"
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID, primary_key=True, default=uuid.uuid4
