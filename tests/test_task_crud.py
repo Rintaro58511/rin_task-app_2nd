@@ -15,7 +15,7 @@ from cruds.tasks import (
     filter_tasks,
 )
 from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
+from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
 
 
