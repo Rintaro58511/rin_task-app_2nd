@@ -7,9 +7,7 @@ from main import app
 import uuid
 from datetime import datetime, date
 from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
-from fastapi import status
 import db
 
 
@@ -40,7 +38,7 @@ def override_get_db():
 
 
 @pytest.mark.anyio
-async def test_search_task(monkeypatch, override_get_db, override_get_current_user):
+async def test_search_task(monkeypatch, override_get_current_user, override_get_db):
     dummy_user_id = uuid.uuid4()
     dummy_task_id = uuid.uuid4()
 
@@ -82,7 +80,7 @@ async def test_search_task(monkeypatch, override_get_db, override_get_current_us
 
 
 @pytest.mark.anyio
-async def test_fail_fetch_task(monkeypatch, override_get_db, override_get_current_user):
+async def test_fail_fetch_task(monkeypatch, override_get_current_user, override_get_db):
     dummy_task_id = uuid.uuid4()
 
     async def mock_fail_fetch_task(task_id, db):
@@ -96,12 +94,12 @@ async def test_fail_fetch_task(monkeypatch, override_get_db, override_get_curren
         response = await ac.get(f"/tasks/{dummy_task_id}")
     assert response.status_code == 404
     body = response.json()
-    assert body["detail"] == "指定されたタスクが見つかりません。"
+    assert body["detail"] == "指定されたタスクが見つかりません"
 
 
 @pytest.mark.anyio
 async def test_fail_db_create_task(
-    monkeypatch, override_get_db, override_get_current_user
+    monkeypatch, override_get_current_user, override_get_db
 ):
     dummy_user_id = uuid.uuid4()
     dummy_task_id = uuid.uuid4()
@@ -137,4 +135,4 @@ async def test_fail_db_create_task(
         )
     assert response.status_code == 403
     body = response.json()
-    assert body["detail"] == "他ユーザーのタスクです。"
+    assert body["detail"] == "他ユーザーのタスクです"

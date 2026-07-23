@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 import pytest
 import routers.user as user
 import routers.tasks as task
@@ -7,9 +7,6 @@ from main import app
 import uuid
 from datetime import datetime, date
 from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
-from enums import TaskStatus
-from fastapi import status
 import db
 
 
@@ -40,7 +37,7 @@ def override_get_db():
 
 
 @pytest.mark.anyio
-async def test_delete_task(monkeypatch, override_get_db, override_get_current_user):
+async def test_delete_task(monkeypatch, override_get_current_user, override_get_db):
     user_id = uuid.uuid4()
     task_id = uuid.uuid4()
 
