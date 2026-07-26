@@ -33,7 +33,8 @@ async function send_request({method, token, url=apiUrl, body = null}){
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            ...headers
         }
     };
 
@@ -266,6 +267,8 @@ async function updateTask(taskId){
             return;
         }
 
+        const etag = response_for_get.headers.get("ETag");
+
         const task = await response_for_get.json();
         const updateTaskForm = document.getElementById('updateTaskForm');
 
@@ -274,6 +277,7 @@ async function updateTask(taskId){
                 <div class="card-body">
                     <h5>タスクの編集</h5>
                     <input type="hidden" id="updateTaskId" value="${task.task_id}">
+                    <input type="hidden" id="updateTaskEtag" value="${etag}">
                     
                     <div class="mb-3">
                         <label for="updateTaskName" class="form-label">タスク名</label>
@@ -330,6 +334,7 @@ updateTaskForm.addEventListener('submit', async function(event){
     event.preventDefault();
 
     const taskId = document.getElementById('updateTaskId').value;
+    const etag = document.getElementById('updateTaskEtag').value;
     const updateTime = getCreateAndUpdateTime();
     const token = getToken();
 
@@ -350,11 +355,18 @@ updateTaskForm.addEventListener('submit', async function(event){
             method: 'PUT',
             token: token,
             url: `${apiUrl}/${taskId}`,
-            body: taskData
+            body: taskData,
+            headers: {
+                'If-Match': etag
+            }
         });
 
         if (response.ok) {
             alert("タスクを更新しました");
+            updateTaskForm.innerHTML = '';
+            fetchAndDisplayTasks();
+        } else if (response.status === 412) {
+            alert("このタスクは他のユーザーによって更新されました。最新の情報を再取得してください。");
             updateTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
         } else {
