@@ -27,7 +27,7 @@ function getToken(){
     return token;
 }
 
-async function send_request({method, token, url=apiUrl, body = null}){
+async function send_request({method, token, url=apiUrl, body = null, headers = {}}){
 
     const options = {
         method: method,
@@ -491,3 +491,20 @@ function toggleProgressInput() {
         }
     }
 }
+
+const profileButton = document.getElementById("profile");
+
+profileButton.addEventListener('click', async function(event){
+    event.preventDefault();
+
+    const token = getToken();
+    const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: 'http://localhost:8002/user/me'
+        });
+
+    const profile = await response.json();
+    alert(`【${profile.message}】\nユーザー名: ${profile.user.user_name}\nEmail: ${profile.user.email}`)
+
+})
