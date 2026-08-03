@@ -27,13 +27,14 @@ function getToken(){
     return token;
 }
 
-async function send_request({method, token, url=apiUrl, body = null}){
+async function send_request({method, token, url=apiUrl, body = null, headers = {}}){
 
     const options = {
         method: method,
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${token}`,
+            ...headers
         }
     };
 
@@ -183,6 +184,17 @@ function displayTasks(tasks){
 
     let htmlContent = '';
     tasks.forEach(function(task){
+        
+        const formattedTime = task.changed_time 
+            ? new Intl.DateTimeFormat('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(task.changed_time))
+            : 'なし';
+        
         htmlContent += `
             <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3" style="width: 18rem;">
@@ -197,7 +209,7 @@ function displayTasks(tasks){
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
-                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${task.changed_time}</h6>
+                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
                     </div>
                 </div>
             </div>
@@ -266,6 +278,8 @@ async function updateTask(taskId){
             return;
         }
 
+        const etag = response_for_get.headers.get("ETag");
+
         const task = await response_for_get.json();
         const updateTaskForm = document.getElementById('updateTaskForm');
 
@@ -274,6 +288,7 @@ async function updateTask(taskId){
                 <div class="card-body">
                     <h5>タスクの編集</h5>
                     <input type="hidden" id="updateTaskId" value="${task.task_id}">
+                    <input type="hidden" id="updateTaskEtag" value="${etag}">
                     
                     <div class="mb-3">
                         <label for="updateTaskName" class="form-label">タスク名</label>
@@ -330,6 +345,7 @@ updateTaskForm.addEventListener('submit', async function(event){
     event.preventDefault();
 
     const taskId = document.getElementById('updateTaskId').value;
+    const etag = document.getElementById('updateTaskEtag').value;
     const updateTime = getCreateAndUpdateTime();
     const token = getToken();
 
@@ -350,11 +366,18 @@ updateTaskForm.addEventListener('submit', async function(event){
             method: 'PUT',
             token: token,
             url: `${apiUrl}/${taskId}`,
-            body: taskData
+            body: taskData,
+            headers: {
+                'If-Match': etag
+            }
         });
 
         if (response.ok) {
             alert("タスクを更新しました");
+            updateTaskForm.innerHTML = '';
+            fetchAndDisplayTasks();
+        } else if (response.status === 412) {
+            alert("このタスクは他のユーザーによって更新されました。最新の情報を再取得してください。");
             updateTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
         } else {
@@ -479,3 +502,20 @@ function toggleProgressInput() {
         }
     }
 }
+
+const profileButton = document.getElementById("profile");
+
+profileButton.addEventListener('click', async function(event){
+    event.preventDefault();
+
+    const token = getToken();
+    const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: 'http://localhost:8002/user/me'
+        });
+
+    const profile = await response.json();
+    alert(`${profile.message}\nユーザー名: ${profile.user.user_name}\nEmail: ${profile.user.email}`)
+
+})

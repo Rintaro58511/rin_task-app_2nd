@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Depends
+from fastapi import APIRouter, status, HTTPException, Depends, Response, Header
 from schemas.tasks import (
     UpdateAndCreateTaskSchema,
     TaskSchema,
@@ -46,6 +46,8 @@ async def create_task(
 @router.get("/tasks/{task_id}", response_model=TaskSchema)
 async def search_task(
     task_id: UUID,
+    response: Response,
+    if_none_match: str | None = Header(None),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(db.get_db_session),
 ) -> TaskSchema:
@@ -57,6 +59,13 @@ async def search_task(
         raise HTTPException(status_code=404, detail="指定されたタスクが見つかりません")
     if task.user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
+
+    etag = f'"{int(task.changed_time.timestamp())}"'
+
+    if if_none_match == etag:
+        return Response(status_code=status.HTTP_304_NOT_MODIFIED)
+
+    response.headers["ETag"] = etag
 
     task_status = TaskStatusSchema(
         task_progress=task.task_progress,
@@ -116,6 +125,7 @@ async def get_tasks(
 async def update_task(
     task_id: UUID,
     task: UpdateAndCreateTaskSchema,
+    if_match: str | None = Header(None),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(db.get_db_session),
 ) -> ResponseSchema:
@@ -129,6 +139,14 @@ async def update_task(
         raise HTTPException(status_code=400, detail="指定されたタスクが存在しません")
     if target_task.user_id != current_user.user_id:
         raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
+
+    current_etag = f'"{int(target_task.changed_time.timestamp())}"'
+
+    if if_match and if_match != current_etag:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail="タスクが他のユーザーによって更新されています。最新データを再取得してください",
+        )
 
     await modify_task(task, target_task, db_session)
 
