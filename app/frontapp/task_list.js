@@ -184,6 +184,17 @@ function displayTasks(tasks){
 
     let htmlContent = '';
     tasks.forEach(function(task){
+        
+        const formattedTime = task.changed_time 
+            ? new Intl.DateTimeFormat('ja-JP', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).format(new Date(task.changed_time))
+            : 'なし';
+        
         htmlContent += `
             <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3" style="width: 18rem;">
@@ -198,7 +209,7 @@ function displayTasks(tasks){
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
-                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${task.changed_time}</h6>
+                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
                     </div>
                 </div>
             </div>
@@ -505,6 +516,6 @@ profileButton.addEventListener('click', async function(event){
         });
 
     const profile = await response.json();
-    alert(`【${profile.message}】\nユーザー名: ${profile.user.user_name}\nEmail: ${profile.user.email}`)
+    alert(`${profile.message}\nユーザー名: ${profile.user.user_name}\nEmail: ${profile.user.email}`)
 
 })
