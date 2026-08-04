@@ -8,7 +8,7 @@
 ## 🛠 使用技術 (Tech Stack)
 
 ### バックエンド (Backend)
-- **Python** 3.11+
+- **Python** Python 3.13
 - **FastAPI** (Webフレームワーク)
 - **SQLAlchemy** (非同期ORM / `AsyncSession`)
 - **Pydantic** (データバリデーション)
@@ -62,12 +62,23 @@ docker compose up -d --build
 
 ### 3. 動作確認
 
-起動後、ブラウザで以下のURLにアクセスします。
+起動後、以下へアクセスできます。
 
-Webアプリ / API: http://localhost:5500
+API: http://localhost:8002
+Swagger UI: http://localhost:8002/docs
+2. フロントエンドの起動
 
-APIドキュメント (Swagger UI): http://localhost:8002/docs
+フロントエンドはVS Code拡張機能のLive Serverを使用します。
 
+VS Codeに「Live Server」をインストール
+app/frontapp/login.htmlを開く
+右クリックして「Open with Live Server」を選択
+
+例:
+
+http://127.0.0.1:5500/task_management/app/frontapp/login.html
+
+※ URLのパスはローカルのディレクトリ構成によって異なる場合があります。
 
 ### 4. コンテナの停止
 
