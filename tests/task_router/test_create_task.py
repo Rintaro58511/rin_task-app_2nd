@@ -64,7 +64,7 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
             "/tasks",
             json={
                 "task_name": "test_task",
-                "task_deadline": "2026-08-01",
+                "task_deadline": "2027-08-01",
                 "task_detail": "コードのリファクタリング",
                 "changed_time": "2026-07-30T11:11:11",
                 "task_status": {
@@ -137,7 +137,7 @@ async def test_fail_db_create_task(
             "/tasks",
             json={
                 "task_name": "test_task",
-                "task_deadline": "2026-08-01",
+                "task_deadline": "2027-08-01",
                 "task_detail": "コードのリファクタリング",
                 "changed_time": "2026-07-30T11:11:11",
                 "task_status": {

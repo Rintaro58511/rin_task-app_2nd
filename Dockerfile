@@ -9,6 +9,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
+    PYTHONPATH=/usr/src/app \
     PATH="/opt/venv/bin:${PATH}"
 
 WORKDIR /usr/src/app
