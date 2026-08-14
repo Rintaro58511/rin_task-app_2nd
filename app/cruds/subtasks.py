@@ -1,7 +1,7 @@
 from schemas.subtasks import UpdateAndCreateSubTaskSchema
 from models.subtasks import SubTask
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, case
+from sqlalchemy import select
 from uuid import UUID
 
 
@@ -50,7 +50,7 @@ async def add_subtask(
 
     Args
         subtask(UpdateAndCreateSubTaskSchema): サブタスク追加フォームに入力された内容
-        user_id(UUID): ログイン中のユーザーのID
+        task_id(UUID): 親タスクのID
         db_session(AsyncSession): データベースの接続動作の依存性注入
 
     """
