@@ -10,7 +10,7 @@ services:
       - "127.0.0.1:8002:8000"
     volumes:
       - ./app:/usr/src/app
-      - ./tests:/usr/src/tests
+      - ./tests:/usr/src/app/tests
     depends_on:
       db:
         condition: service_healthy

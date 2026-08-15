@@ -18,7 +18,7 @@ class SubTask(Base):
         UUID, primary_key=True, default=uuid.uuid4
     )
     task_id: Mapped[uuid.UUID] = mapped_column(
-        UUID, ForeignKey("tasks.task_id"), nullable=False, ondelete="CASCADE"
+        UUID, ForeignKey("tasks.task_id", ondelete="CASCADE"), nullable=False
     )
     subtask_name: Mapped[str] = mapped_column(
         String(30), nullable=False
