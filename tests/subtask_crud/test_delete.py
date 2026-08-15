@@ -21,15 +21,10 @@ def target_subtask():
 
 @pytest.mark.anyio
 async def test_remove_subtask(target_subtask, monkeypatch):
-    async def mock_fetch_subtask(subtask_id, db_session):
-        return target_subtask
-
-    monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
-    
     mock_db = AsyncMock()
     mock_db.delete = AsyncMock()
     
-    await remove_subtask(target_subtask.subtask_id, mock_db)
+    await remove_subtask(target_subtask, mock_db)
 
     assert mock_db.delete.call_args.args[0] == target_subtask
 

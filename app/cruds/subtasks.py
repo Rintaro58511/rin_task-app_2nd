@@ -63,7 +63,7 @@ async def add_subtask(
     db_session.add(new_subtask)
 
 
-async def remove_subtask(subtask_id: UUID, db_session: AsyncSession) -> SubTask | None:
+async def remove_subtask(target_subtask: SubTask, db_session: AsyncSession) -> SubTask:
     """
     引数のサブタスクIDと一致したサブタスクを削除する
 
@@ -71,11 +71,10 @@ async def remove_subtask(subtask_id: UUID, db_session: AsyncSession) -> SubTask 
         subtask_id(UUID): 削除したいタスクのID
         db_session(AsyncSession): データベースの接続動作の依存性注入
 
-    """
-    target_subtask = await fetch_subtask(subtask_id, db_session)
+    Return
+            SubTask: 対象のタスクの内容
 
-    if target_subtask is None:
-        return None
+    """
 
     await db_session.delete(target_subtask)
     return target_subtask
