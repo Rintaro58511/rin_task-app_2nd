@@ -42,7 +42,7 @@ RUN groupadd --gid 10001 appgroup \
         appuser
 
 COPY --chown=appuser:appgroup app/ ./
-COPY --chown=appuser:appgroup tests/ /usr/src/tests/
+COPY --chown=appuser:appgroup tests/ /usr/src/app/tests/
 
 USER appuser
 
