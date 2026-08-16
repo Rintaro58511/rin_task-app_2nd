@@ -65,7 +65,7 @@ async def add_subtask(
 
 async def remove_subtask(target_subtask: SubTask, db_session: AsyncSession) -> SubTask:
     """
-    引数のサブタスクIDと一致したサブタスクを削除する
+    引数のサブタスクを削除する
 
     Args
         subtask_id(UUID): 削除したいタスクのID
