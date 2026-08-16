@@ -6,6 +6,8 @@ from fastapi import HTTPException
 from routers.subtasks import delete_subtask
 from routers import subtasks
 
+from enums import TaskStatus
+
 
 @pytest.mark.anyio
 async def test_delete_subtask(subtask, task, monkeypatch):
@@ -19,23 +21,28 @@ async def test_delete_subtask(subtask, task, monkeypatch):
         return subtask
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
-    async def mock_modify_subtask(target_subtask):
+    async def mock_remove_subtask(target_subtask, db_session):
         return None
-    monkeypatch.setattr(subtasks, "modify_subtask", mock_modify_subtask)
+    monkeypatch.setattr(subtasks, "remove_subtask", mock_remove_subtask)
 
     async def mock_calculate_ratio(task_id, db_session):
         return 50
     monkeypatch.setattr(subtasks, "calculate_ratio", mock_calculate_ratio)
 
+    async def mock_check_progress(progress_ratio, db_session):
+        return TaskStatus.IN_PROGRESS
+    monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
+
     response = await delete_subtask(subtask.subtask_id, subtask.task_id, mock_db)
 
     assert response.message == "サブタスクを削除しました"
     assert task.progress_ratio == 50
+    assert task.task_progress == TaskStatus.IN_PROGRESS
     mock_db.flush.assert_awaited_once()
     mock_db.commit.assert_awaited_once()
 
 @pytest.mark.anyio
-async def test_delete_subtask(subtask, task, monkeypatch):
+async def test_delete_all_subtask(subtask, task, monkeypatch):
     mock_db = AsyncMock()
 
     async def mock_fetch_task(task_id, db_session):
@@ -46,18 +53,23 @@ async def test_delete_subtask(subtask, task, monkeypatch):
         return subtask
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
-    async def mock_modify_subtask(target_subtask):
+    async def mock_remove_subtask(target_subtask, db_session):
         return None
-    monkeypatch.setattr(subtasks, "modify_subtask", mock_modify_subtask)
+    monkeypatch.setattr(subtasks, "remove_subtask", mock_remove_subtask)
 
     async def mock_calculate_ratio(task_id, db_session):
         return None
     monkeypatch.setattr(subtasks, "calculate_ratio", mock_calculate_ratio)
 
+    async def mock_check_progress(progress_ratio, db_session):
+        return TaskStatus.IN_PROGRESS
+    monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
+
     response = await delete_subtask(subtask.subtask_id, subtask.task_id, mock_db)
 
     assert response.message == "サブタスクを削除しました"
     assert task.progress_ratio == 80
+    assert task.task_progress == TaskStatus.IN_PROGRESS
     mock_db.flush.assert_awaited_once()
     mock_db.commit.assert_awaited_once()
 

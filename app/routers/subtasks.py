@@ -3,8 +3,6 @@ from fastapi import (
     status,
     HTTPException,
     Depends,
-    Response,
-    Header
 )
 from cruds.tasks import(
     fetch_task
@@ -15,7 +13,8 @@ from schemas.subtasks import (
     ResponseSchema
 )
 from service.subtasks import(
-    calculate_ratio
+    calculate_ratio,
+    check_progress,
 )
 from cruds.subtasks import (
     add_subtask,
@@ -51,6 +50,9 @@ async def create_subtask(
     progress_ratio = await calculate_ratio(task_id, db_session)
     task.progress_ratio = progress_ratio
 
+    task_progress = await check_progress(progress_ratio, db_session)
+    task.task_progress = task_progress
+
     await db_session.commit()
     return ResponseSchema(status_code=201, message="サブタスクを登録しました")
 
@@ -83,7 +85,7 @@ async def get_subtasks(
     return subtask_list
 
 @router.put(
-    "tasks/{task_id}/subtasks/{subtask_id}", response_model=ResponseSchema
+    "/tasks/{task_id}/subtasks/{subtask_id}", response_model=ResponseSchema
 )
 async def update_subtask(
     subtask_schema: UpdateAndCreateSubTaskSchema,
@@ -110,12 +112,16 @@ async def update_subtask(
     
     progress_ratio = await calculate_ratio(task_id, db_session)
     task.progress_ratio = progress_ratio
+
+    task_progress = await check_progress(progress_ratio, db_session)
+    task.task_progress = task_progress
+
     await db_session.commit()
 
     return ResponseSchema(message="サブタスクを更新しました")
 
 @router.delete(
-    "tasks/{task_id}/subtasks/{subtask_id}", response_model=ResponseSchema
+    "/tasks/{task_id}/subtasks/{subtask_id}", response_model=ResponseSchema
 )
 async def delete_subtask(
     subtask_id: UUID,
@@ -127,7 +133,7 @@ async def delete_subtask(
     task = await fetch_task(task_id, db_session)
     if task is None:
         raise HTTPException(status_code=404, detail="指定されたタスクが存在しません")
-    
+
     target_subtask = await fetch_subtask(subtask_id, db_session)
     if target_subtask is None:
         raise HTTPException(status_code=404, detail="指定されたサブタスクが存在しません")
@@ -140,6 +146,9 @@ async def delete_subtask(
     progress_ratio = await calculate_ratio(task_id, db_session)
     if progress_ratio is not None:
         task.progress_ratio = progress_ratio
+
+    task_progress = await check_progress(progress_ratio, db_session)
+    task.task_progress = task_progress
 
     await db_session.commit()
 
