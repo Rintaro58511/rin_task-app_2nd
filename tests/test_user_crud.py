@@ -48,7 +48,7 @@ async def test_add_user():
     returned_user = await add_user(expected_user, mock_db)
 
     assert returned_user.user_name == "rintaro"
-    assert returned_user.email == "test@test.com"
+    assert returned_user.email == "***@***"
 
     mock_db.add.assert_called_once()
     mock_db.commit.assert_awaited_once()
