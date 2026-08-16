@@ -1,34 +1,9 @@
 from unittest.mock import AsyncMock, MagicMock
 import pytest
 
-import uuid
 from datetime import datetime
 
 from cruds.subtasks import fetch_subtasks
-from models.subtasks import SubTask
-
-@pytest.fixture(scope="module")
-def subtask_list():
-    task_id = uuid.uuid4()
-    subtask_id_1 = uuid.uuid4()
-    subtask_id_2 = uuid.uuid4()
-    expected_subtasks = [
-        SubTask(
-            subtask_id=subtask_id_1,
-            task_id=task_id,
-            subtask_name="test_subtask1",
-            is_complete=True,
-            created_at=datetime(2026, 8, 15)
-        ),
-        SubTask(
-            subtask_id=subtask_id_2,
-            task_id=task_id,
-            subtask_name="test_subtask2",
-            is_complete=False,
-            created_at=datetime(2026, 8, 16)
-        )
-    ]
-    return expected_subtasks
 
 @pytest.mark.anyio
 async def test_fetch_subtasks(subtask_list):
