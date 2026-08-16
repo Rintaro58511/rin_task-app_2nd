@@ -2,35 +2,9 @@ from unittest.mock import AsyncMock
 
 import pytest
 from datetime import datetime
-import uuid
-
-from models.subtasks import SubTask
 
 from routers.subtasks import get_subtasks
 from routers import subtasks
-
-@pytest.fixture
-def subtask_list():
-    subtask_id1 = uuid.uuid4()
-    subtask_id2 = uuid.uuid4()
-    task_id = uuid.uuid4()
-    expected_subtasks = [
-        SubTask(
-            subtask_id = subtask_id1,
-            task_id = task_id,
-            subtask_name = "test_subtask1",
-            is_complete = True,
-            created_at = datetime(2026, 8, 15)
-        ),
-        SubTask(
-            subtask_id = subtask_id2,
-            task_id = task_id,
-            subtask_name = "test_subtask2",
-            is_complete = False,
-            created_at = datetime(2026, 8, 16)
-        ),
-    ]
-    return expected_subtasks
 
 @pytest.mark.anyio
 async def test_get_tasks(subtask_list, monkeypatch):

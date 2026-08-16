@@ -1,39 +1,10 @@
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 import pytest
 import uuid
-from datetime import datetime, date
 from fastapi import HTTPException
-
-from models.tasks import Task
-from enums import TaskStatus
-
-from schemas.subtasks import UpdateAndCreateSubTaskSchema
 
 from routers import subtasks
 from routers.subtasks import create_subtask
-
-@pytest.fixture
-def subtask_schema():
-    expeted_subtask_schema = UpdateAndCreateSubTaskSchema(
-        subtask_name = "test_subtask",
-        is_complete = True,
-    )
-    return expeted_subtask_schema
-
-@pytest.fixture
-def task():
-    expeted_task = Task(
-        task_id = uuid.uuid4(),
-        user_id = uuid.uuid4(),
-        task_name = "test_task",
-        task_deadline = date(2026, 9, 20),
-        task_detail = None,
-        changed_time = datetime(2026, 8, 16),
-        task_progress = TaskStatus.TODO,
-        progress_ratio = 10,
-        progress_comment = "少し進んだ"
-    )
-    return expeted_task
 
 @pytest.mark.anyio
 async def test_create_subtask(subtask_schema, task, monkeypatch):
@@ -75,6 +46,6 @@ async def test_create_none_subtask(subtask_schema, task, monkeypatch):
 
     assert exc_info.value.detail == "タスクが存在しません"
     assert exc_info.value.status_code == 404
-    assert task.progress_ratio == 10
+    assert task.progress_ratio == 80
     mock_db.flush.assert_not_awaited()
     mock_db.commit.assert_not_awaited()

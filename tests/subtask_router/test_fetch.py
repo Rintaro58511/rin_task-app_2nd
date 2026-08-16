@@ -4,22 +4,8 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 from fastapi import HTTPException
 
-from models.subtasks import SubTask
-
 from routers.subtasks import search_subtask
 from routers import subtasks
-
-
-@pytest.fixture
-def subtask():
-    expected_subtask = SubTask(
-        subtask_id = uuid.uuid4(),
-        task_id = uuid.uuid4(),
-        subtask_name = "test_subtask",
-        is_complete = True,
-        created_at = datetime(2026, 8, 15)
-    )
-    return expected_subtask
 
 @pytest.mark.anyio
 async def test_search_subtask(subtask, monkeypatch):
@@ -33,7 +19,7 @@ async def test_search_subtask(subtask, monkeypatch):
     response = await search_subtask(subtask_id, mock_db)
 
     assert response.subtask_name == "test_subtask"
-    assert response.is_complete == True
+    assert response.is_complete == False
     assert response.created_at == datetime(2026, 8, 15)
 
 @pytest.mark.anyio
