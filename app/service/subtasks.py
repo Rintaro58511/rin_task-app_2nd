@@ -1,7 +1,16 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
+from enums import TaskStatus
 
 from cruds.subtasks import fetch_subtasks
+
+async def check_progress(progress_ratio: int, db_session: AsyncSession) -> TaskStatus:
+    if progress_ratio == 0:
+        return TaskStatus.TODO
+    elif progress_ratio == 100:
+        return TaskStatus.DONE
+    else:
+        return TaskStatus.IN_PROGRESS
 
 async def calculate_ratio(task_id: UUID, db_session: AsyncSession) -> int | None:
     total_subtasks = await fetch_subtasks(task_id, db_session)

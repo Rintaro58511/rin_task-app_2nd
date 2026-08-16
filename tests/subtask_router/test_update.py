@@ -6,6 +6,8 @@ from fastapi import HTTPException
 from routers.subtasks import update_subtask
 from routers import subtasks
 
+from enums import TaskStatus
+
 @pytest.mark.anyio
 async def test_update_subtask(subtask_schema, subtask, task, monkeypatch):
     mock_db = AsyncMock()
@@ -26,10 +28,15 @@ async def test_update_subtask(subtask_schema, subtask, task, monkeypatch):
         return 50
     monkeypatch.setattr(subtasks, "calculate_ratio", mock_calculate_ratio)
 
+    async def mock_check_progress(progress_ratio, db_session):
+        return TaskStatus.IN_PROGRESS
+    monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
+
     response = await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, mock_db)
 
     assert response.message == "サブタスクを更新しました"
     assert task.progress_ratio == 50
+    assert task.task_progress == TaskStatus.IN_PROGRESS
     mock_db.flush.assert_awaited_once()
     mock_db.commit.assert_awaited_once()
 
