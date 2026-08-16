@@ -4,7 +4,6 @@ import pytest
 import uuid
 
 from cruds.subtasks import add_subtask
-from schemas.subtasks import UpdateAndCreateSubTaskSchema
 
 @pytest.mark.anyio
 async def test_add_subtask(subtask_schema):

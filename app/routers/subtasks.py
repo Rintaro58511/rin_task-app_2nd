@@ -31,7 +31,7 @@ from datetime import date
 router = APIRouter()
 
 @router.post(
-    "/tasks/subtask", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
+    "/tasks/{task_id}/subtask", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
 )
 async def create_subtask(
     subtask: UpdateAndCreateSubTaskSchema,
