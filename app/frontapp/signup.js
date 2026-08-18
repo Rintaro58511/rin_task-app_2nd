@@ -81,6 +81,9 @@ async function signUpUser(user) {
 
         const data = response.json();
 
+        console.log(response.status);
+        console.log(data);
+
         if(response.ok){
             alert(data.message || 'サインアップに成功しました');
             window.location.href = "./login.html";            

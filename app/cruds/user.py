@@ -40,6 +40,7 @@ async def add_user(user: UserInDB, db_session: AsyncSession) -> User:
     hashed_password = password_hash.hash(user.hashed_password)
 
     user_data = user.model_dump()
+    user_data["email"] = str(user.email.get_secret_value())
     user_data["hashed_password"] = hashed_password
     new_user = User(**user_data)
 

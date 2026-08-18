@@ -2,6 +2,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from datetime import datetime
+import uuid
 
 from cruds.subtasks import fetch_subtask
 
@@ -16,7 +17,9 @@ async def test_fetch_subtask(subtask):
     mock_result.scalars.return_value = mock_scalars
     mock_scalars.first.return_value = subtask
 
-    retrieved_subtask = await fetch_subtask(subtask.subtask_id, mock_db)
+    user_id = uuid.uuid4()
+
+    retrieved_subtask = await fetch_subtask(subtask.subtask_id, user_id, mock_db)
 
     assert retrieved_subtask.subtask_name == "test_subtask"
     assert retrieved_subtask.is_complete == False

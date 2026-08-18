@@ -1,29 +1,15 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock
 
 from main import app
 
 from routers import subtasks
 
-import db
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
 
 @pytest.mark.anyio
-async def test_get_subtasks(monkeypatch, subtask_list, override_get_db):
+async def test_get_subtasks(monkeypatch, subtask_list, override_get_db, override_get_current_user):
 
-    async def mock_fetch_subtasks(task_id, db):
+    async def mock_fetch_subtasks(task_id, user_id, db):
         return subtask_list
     monkeypatch.setattr(subtasks, "fetch_subtasks", mock_fetch_subtasks)
 

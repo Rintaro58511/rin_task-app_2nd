@@ -1,7 +1,8 @@
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from datetime import datetime
+import uuid
 
 from routers.subtasks import get_subtasks
 from routers import subtasks
@@ -9,8 +10,10 @@ from routers import subtasks
 @pytest.mark.anyio
 async def test_get_tasks(subtask_list, monkeypatch):
     mock_db = AsyncMock()
+    current_user = MagicMock()
+    current_user.user_id = uuid.uuid4()
 
-    async def mock_fetch_subtasks(task_id, mock_db):
+    async def mock_fetch_subtasks(task_id, current_user, mock_db):
         return subtask_list
     monkeypatch.setattr(subtasks, "fetch_subtasks", mock_fetch_subtasks)
 

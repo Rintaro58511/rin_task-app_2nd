@@ -4,39 +4,11 @@ import routers.user as user
 import routers.tasks as task
 from httpx import ASGITransport, AsyncClient
 from main import app
-import uuid
 from datetime import datetime, date
 from models.tasks import Task
 from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
 from fastapi import status
-import db
-
-
-@pytest.fixture
-def override_get_current_user():
-
-    async def override_user():
-        yield AsyncMock()
-
-    app.dependency_overrides[user.get_current_user] = override_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
 
 
 @pytest.mark.anyio
