@@ -94,13 +94,10 @@ createTaskForm.addEventListener('submit', function(event){
 
     event.preventDefault();
 
-    const createTime = getCreateAndUpdateTime();
-
     const taskData = {
         task_name: document.getElementById('taskName').value,
         task_deadline: document.getElementById('taskDeadline').value,
         task_detail: document.getElementById('taskDetail').value,
-        changed_time: createTime,
         task_status: {
             task_progress: document.querySelector('input[name="taskStatus"]:checked').value,
             progress_ratio: 0,
@@ -146,12 +143,9 @@ async function addTask(task){
 document.addEventListener("DOMContentLoaded", fetchAndDisplayTasks);
 async function fetchAndDisplayTasks(){
 
-    console.log(currentSort)
-
     const token = getToken()
 
     try{
-
         let requestUrl = apiUrl;
         if (currentSort) {
             requestUrl = `${apiUrl}?sort=${currentSort}`;
@@ -194,20 +188,21 @@ function displayTasks(tasks){
                 minute: '2-digit'
             }).format(new Date(task.changed_time))
             : 'なし';
-        
         htmlContent += `
             <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3" style="width: 18rem;">
                     <div class="card-body">
                         <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%"></div>
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%" data-task-bar="${task.task_id}"></div>
                         </div>
                         <h5 class="card-title mt-2">${task.task_name}</h5>
                         <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
-                        <h6 class="card-subtitle mb-2 text-body-secondary">状態: ${task.task_status.task_progress}</h6>
+                        <h6 class="card-subtitle mb-2 text-body-secondary" data-task-status="${task.task_id}">状態: ${task.task_status.task_progress}</h6>
                         <p class="card-text">${task.task_detail}</p>
+                        <div id="subTaskList-${task.task_id}"></div>
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
+                        <button type="button" class="btn btn-success w-100 mt-2 addSubTaskButton" data-id="${task.task_id}">サブタスクの追加</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
                     </div>
@@ -216,11 +211,14 @@ function displayTasks(tasks){
         `;
     });
     list.innerHTML = htmlContent;
+    tasks.forEach(function(task) {
+        fetchAndDisplaySubTasks(task.task_id);
+    });
 }
 
 document.getElementById('taskList').addEventListener("click", async function(event){
 
-    if(!event.target.classList.contains('deleteButton') && !event.target.classList.contains('updateButton')) return;
+    if(!event.target.classList.contains('deleteButton') && !event.target.classList.contains('updateButton') && !event.target.classList.contains('addSubTaskButton')) return;
 
     const taskId = event.target.dataset.id;
 
@@ -230,7 +228,6 @@ document.getElementById('taskList').addEventListener("click", async function(eve
     if(event.target.classList.contains('updateButton')){
         updateTask(taskId);
     }
-
 });
 
 async function deleteTask(taskId){
@@ -279,6 +276,7 @@ async function updateTask(taskId){
         }
 
         const etag = response_for_get.headers.get("ETag");
+        console.log("GET ETag:", etag);
 
         const task = await response_for_get.json();
         const updateTaskForm = document.getElementById('updateTaskForm');
@@ -346,20 +344,18 @@ updateTaskForm.addEventListener('submit', async function(event){
 
     const taskId = document.getElementById('updateTaskId').value;
     const etag = document.getElementById('updateTaskEtag').value;
-    const updateTime = getCreateAndUpdateTime();
     const token = getToken();
 
     const taskData = {
     task_name: document.getElementById('updateTaskName').value,
     task_deadline: document.getElementById('updateTaskDeadline').value,
     task_detail: document.getElementById('updateTaskDetail').value,
-    changed_time: updateTime,
     task_status: {
         task_progress: document.querySelector('input[name="updateTaskStatus"]:checked').value,
         progress_ratio: document.getElementById('progressRatio').value,
         progress_comment: document.getElementById('progressComment').value 
-    }
-};
+        }
+    };
 
     try {
         const response = await send_request({
@@ -376,6 +372,10 @@ updateTaskForm.addEventListener('submit', async function(event){
             alert("タスクを更新しました");
             updateTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
+        }else if(response.status === 401) {
+            alert("認証エラーが発生しました。再度ログインしてください。");
+            localStorage.removeItem('token');
+            window.location.href = "./login.html";
         } else if (response.status === 412) {
             alert("このタスクは他のユーザーによって更新されました。最新の情報を再取得してください。");
             updateTaskForm.innerHTML = '';
@@ -519,3 +519,29 @@ profileButton.addEventListener('click', async function(event){
     alert(`${profile.message}\nユーザー名: ${profile.user.user_name}\nEmail: ${profile.user.email}`)
 
 })
+
+async function refreshTask(taskId){
+    const token = getToken();
+
+    try {
+        const response = await send_request({
+            method: 'GET',
+            token: token,
+            url: `${apiUrl}/${taskId}`,
+        });
+
+        if (response.ok) {
+            const refreshTask = await response.json()
+            console.log("refreshTask:", refreshTask.task_status.progress_ratio);
+            const barWidth = document.querySelector(`[data-task-bar="${taskId}"]`)
+            const changedStatus = document.querySelector(`[data-task-status="${taskId}"]`)
+            barWidth.style.width = `${refreshTask.task_status.progress_ratio}%`
+            changedStatus.textContent = `状態: ${refreshTask.task_status.task_progress}`
+        } else {
+            const err = await response.json();
+            alert(err.detail || "タスクの更新に失敗しました");
+        }
+    } catch (error) {
+        console.error('タスク更新中にエラーが発生しました', error);
+    }
+}

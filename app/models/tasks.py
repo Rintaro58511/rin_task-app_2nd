@@ -32,7 +32,7 @@ class Task(Base):
     )
     task_deadline: Mapped[date] = mapped_column(Date, nullable=False)
     task_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
-    changed_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    changed_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     task_progress: Mapped[TaskStatus] = mapped_column(
         SQLEnum(TaskStatus), default=TaskStatus.TODO, nullable=False
     )

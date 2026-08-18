@@ -36,7 +36,14 @@ async def fetch_subtasks(task_id: UUID, db_session: AsyncSession) -> list[SubTas
 
     """
 
-    results = await db_session.execute(select(SubTask).where(SubTask.task_id == task_id))
+    results = await db_session.execute(
+        select(SubTask)
+        .where(SubTask.task_id == task_id)
+        .order_by(
+        SubTask.created_at.asc(),
+        SubTask.subtask_id.asc()
+        )
+    )
     target_subtasks = results.scalars().all()
 
     return target_subtasks

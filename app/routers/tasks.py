@@ -39,7 +39,8 @@ async def create_task(
     try:
         await add_task(task, current_user.user_id, db_session)
         return ResponseSchema(message="タスク追加ができました")
-    except Exception:
+    except Exception as e:
+        print(e)
         raise HTTPException(status_code=400, detail="タスクの登録に失敗しました")
 
 
@@ -77,7 +78,6 @@ async def search_task(
         task_name=task.task_name,
         task_deadline=task.task_deadline,
         task_detail=task.task_detail,
-        changed_time=task.changed_time,
         task_status=task_status,
     )
 
@@ -113,7 +113,6 @@ async def get_tasks(
             task_name=task.task_name,
             task_deadline=task.task_deadline,
             task_detail=task.task_detail,
-            changed_time=task.changed_time,
             task_status=task_status,
         )
         tasks_pydantic.append(task_pydantic)
@@ -141,6 +140,9 @@ async def update_task(
         raise HTTPException(status_code=403, detail="他ユーザーのタスクです")
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
+
+    print("If-Match:", if_match)
+    print("Current ETag:", current_etag)
 
     if if_match and if_match != current_etag:
         raise HTTPException(

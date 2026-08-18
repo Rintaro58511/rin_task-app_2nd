@@ -26,7 +26,7 @@ from cruds.subtasks import (
 from sqlalchemy.ext.asyncio import AsyncSession
 import db
 from uuid import UUID
-from datetime import date
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -116,7 +116,11 @@ async def update_subtask(
     task_progress = await check_progress(progress_ratio, db_session)
     task.task_progress = task_progress
 
+    task.changed_time = datetime.now(timezone.utc)
+
     await db_session.commit()
+
+    print(f"progress_ratio: {progress_ratio}")
 
     return ResponseSchema(message="サブタスクを更新しました")
 
