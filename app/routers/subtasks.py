@@ -46,10 +46,10 @@ async def create_subtask(
     if task is None:
         raise HTTPException(status_code=404, detail="タスクが存在しません")
     
-    await add_subtask(subtask, task_id, current_user.user_id, db_session)
+    await add_subtask(subtask, task_id, db_session)
     await db_session.flush()
 
-    progress_ratio = await calculate_ratio(task_id, db_session)
+    progress_ratio = await calculate_ratio(task_id, current_user.user_id, db_session)
     task.progress_ratio = progress_ratio
 
     task_progress = await check_progress(progress_ratio, db_session)
@@ -114,10 +114,10 @@ async def update_subtask(
     if task_id != target_subtask.task_id:
         raise HTTPException(status_code=400, detail="親タスクが異なります")
 
-    await modify_subtask(subtask_schema, current_user.user_id, target_subtask)
+    await modify_subtask(subtask_schema, target_subtask)
     await db_session.flush()
     
-    progress_ratio = await calculate_ratio(task_id, db_session)
+    progress_ratio = await calculate_ratio(task_id, current_user.user_id, db_session)
     task.progress_ratio = progress_ratio
 
     task_progress = await check_progress(progress_ratio, db_session)
@@ -150,10 +150,10 @@ async def delete_subtask(
     if task_id != target_subtask.task_id:
         raise HTTPException(status_code=400, detail="親タスクが異なります")
 
-    await remove_subtask(target_subtask, current_user.user_id, db_session)
+    await remove_subtask(target_subtask, db_session)
     await db_session.flush()
         
-    progress_ratio = await calculate_ratio(task_id, db_session)
+    progress_ratio = await calculate_ratio(task_id, current_user.user_id, db_session)
     if progress_ratio is not None:
         task.progress_ratio = progress_ratio
         

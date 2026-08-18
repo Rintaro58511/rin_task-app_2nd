@@ -12,8 +12,8 @@ async def check_progress(progress_ratio: int, db_session: AsyncSession) -> TaskS
     else:
         return TaskStatus.IN_PROGRESS
 
-async def calculate_ratio(task_id: UUID, db_session: AsyncSession) -> int | None:
-    total_subtasks = await fetch_subtasks(task_id, db_session)
+async def calculate_ratio(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> int | None:
+    total_subtasks = await fetch_subtasks(task_id, user_id, db_session)
     total_subtasks_cnt = len(total_subtasks)
     if total_subtasks_cnt == 0:
         return None

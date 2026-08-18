@@ -49,6 +49,28 @@ services:
     networks:
       - backend
 
+  db-test:
+    image: postgres:16-alpine
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_TEST:?POSTGRES_USER_TEST is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_TEST:?POSTGRES_PASSWORD_TEST is required}
+      POSTGRES_DB: ${POSTGRES_DB_TEST:?POSTGRES_DB_TEST is required}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - backend
+    
   adminer:
     image: adminer:5
     profiles:

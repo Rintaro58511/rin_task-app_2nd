@@ -1,6 +1,5 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock
 
 from enums import TaskStatus
 
@@ -8,28 +7,15 @@ from main import app
 
 from routers import subtasks
 
-import db
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
 
 @pytest.mark.anyio
-async def test_delete_subtask(monkeypatch, task, subtask, override_get_db):
+async def test_delete_subtask(monkeypatch, task, subtask, override_get_db, override_get_current_user):
 
-    async def mock_fetch_task(task_id, db):
+    async def mock_fetch_task(task_id, user_id, db):
         return task
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_task)
 
-    async def mock_fetch_subtask(task_id, db):
+    async def mock_fetch_subtask(task_id, user_id, db):
         return subtask
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
     
@@ -37,7 +23,7 @@ async def test_delete_subtask(monkeypatch, task, subtask, override_get_db):
         return None
     monkeypatch.setattr(subtasks, "remove_subtask", mock_remove_subtask)
 
-    async def mock_calculate_ratio(task_id, db):
+    async def mock_calculate_ratio(task_id, user_id, db):
         return 50
     monkeypatch.setattr(subtasks, "calculate_ratio", mock_calculate_ratio)
 
@@ -56,9 +42,9 @@ async def test_delete_subtask(monkeypatch, task, subtask, override_get_db):
     assert body["message"] == "サブタスクを削除しました"
 
 @pytest.mark.anyio
-async def test_delete_none_task(monkeypatch, subtask, task, override_get_db):
+async def test_delete_none_task(monkeypatch, subtask, task, override_get_db, override_get_current_user):
 
-    async def mock_fetch_none_task(task_id, db):
+    async def mock_fetch_none_task(task_id, user_id, db):
         return None
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_none_task)
     
@@ -73,13 +59,13 @@ async def test_delete_none_task(monkeypatch, subtask, task, override_get_db):
     assert body["detail"] == "指定されたタスクが存在しません"
 
 @pytest.mark.anyio
-async def test_delete_none_subtask(monkeypatch, subtask, task, override_get_db):
+async def test_delete_none_subtask(monkeypatch, subtask, task, override_get_db, override_get_current_user):
 
-    async def mock_fetch_task(task_id, db):
+    async def mock_fetch_task(task_id, user_id, db):
         return task
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_task)
 
-    async def mock_fetch_none_subtask(subtask_id, db):
+    async def mock_fetch_none_subtask(subtask_id, user_id, db):
         return None
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
     
@@ -94,13 +80,13 @@ async def test_delete_none_subtask(monkeypatch, subtask, task, override_get_db):
     assert body["detail"] == "指定されたサブタスクが存在しません"
 
 @pytest.mark.anyio
-async def test_delete_other_task(monkeypatch, subtask, task, other_task, override_get_db):
+async def test_delete_other_task(monkeypatch, subtask, task, other_task, override_get_db, override_get_current_user):
 
-    async def mock_fetch_task(task_id, db):
+    async def mock_fetch_task(task_id, user_id, db):
         return task
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_task)
 
-    async def mock_fetch_subtask(subtask_id, db):
+    async def mock_fetch_subtask(subtask_id, user_id, db):
         return subtask
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
     

@@ -1,29 +1,14 @@
 import pytest
 from httpx import ASGITransport, AsyncClient
-from unittest.mock import AsyncMock
 
 from main import app
 
 from routers import subtasks
 
-import db
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
-
 @pytest.mark.anyio
-async def test_search_subtask(monkeypatch, subtask, override_get_db):
+async def test_search_subtask(monkeypatch, subtask, override_get_db, override_get_current_user):
 
-    async def mock_fetch_subtask(subtask_id, db):
+    async def mock_fetch_subtask(subtask_id, user_id, db):
         return subtask
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
@@ -41,9 +26,9 @@ async def test_search_subtask(monkeypatch, subtask, override_get_db):
     assert body["created_at"] == subtask.created_at.isoformat()
 
 @pytest.mark.anyio
-async def test_search_none_subtask(monkeypatch, subtask, override_get_db):
+async def test_search_none_subtask(monkeypatch, subtask, override_get_db, override_get_current_user):
 
-    async def mock_fetch_none_subtask(subtask_id, db):
+    async def mock_fetch_none_subtask(subtask_id, user_id, db):
         return None
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
 

@@ -1,11 +1,12 @@
 from schemas.subtasks import UpdateAndCreateSubTaskSchema
 from models.subtasks import SubTask
+from models.tasks import Task
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
 
 
-async def fetch_subtask(subtask_id: UUID, db_session: AsyncSession) -> SubTask | None:
+async def fetch_subtask(subtask_id: UUID, user_id: UUID, db_session: AsyncSession) -> SubTask | None:
     """
     サブタスク情報をサブタスクのIDを元にデータベースから探す
 
@@ -17,13 +18,16 @@ async def fetch_subtask(subtask_id: UUID, db_session: AsyncSession) -> SubTask |
         SubTask: 探したいタスクの情報
 
     """
-    result = await db_session.execute(select(SubTask).filter(SubTask.subtask_id == subtask_id))
+    result = await db_session.execute(select(SubTask)
+                                      .where(SubTask.subtask_id == subtask_id)
+                                      .join(Task)
+                                      .where(Task.user_id == user_id))
     target_subtask = result.scalars().first()
 
     return target_subtask
 
 
-async def fetch_subtasks(task_id: UUID, db_session: AsyncSession) -> list[SubTask]:
+async def fetch_subtasks(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> list[SubTask]:
     """
     タスクが持っている全てのサブタスク情報をデータベースから探す
 
@@ -39,6 +43,8 @@ async def fetch_subtasks(task_id: UUID, db_session: AsyncSession) -> list[SubTas
     results = await db_session.execute(
         select(SubTask)
         .where(SubTask.task_id == task_id)
+        .join(Task)
+        .where(Task.user_id == user_id)
         .order_by(
         SubTask.created_at.asc(),
         SubTask.subtask_id.asc()
