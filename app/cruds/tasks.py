@@ -6,7 +6,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 
 
-async def fetch_task(task_id: UUID, db_session: AsyncSession) -> Task:
+async def fetch_task(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> Task:
     """
     タスク情報をタスクのIDを元にデータベースから探す
 
@@ -18,7 +18,7 @@ async def fetch_task(task_id: UUID, db_session: AsyncSession) -> Task:
         Task: 探したいタスクの情報
 
     """
-    result = await db_session.execute(select(Task).filter(Task.task_id == task_id))
+    result = await db_session.execute(select(Task).filter(Task.task_id == task_id, Task.user_id == user_id))
     target_task = result.scalars().first()
 
     return target_task

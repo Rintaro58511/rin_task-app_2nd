@@ -3,16 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.tasks import router as task_router
 from routers.user import router as user_router
 from routers.subtasks import router as subtask_router
+import os
 
 app = FastAPI(
     title="タスク管理 & ユーザー認証 API",
     description="FastAPI + PostgreSQL で構築した、認証機能付きのタスク管理システムです。",
 )
 
-origins = [
-    "http://localhost:3000",
-    "http://127.0.0.1:5500",
-]
+origins = os.getenv("CORS_ORIGINS", "").split(",")
 
 app.add_middleware(
     CORSMiddleware,

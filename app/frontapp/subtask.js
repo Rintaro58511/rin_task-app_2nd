@@ -65,9 +65,13 @@ createSubTaskForm.addEventListener("click", function (event){
 
 
 async function addSubTask(subTask){
+    
+    const token = getToken();
+
     try {
         const response = await send_request({
             method: "POST",
+            token: token,
             url: `${apiUrl}/${selectedTaskId}/subtask`,
             body: subTask,
         });

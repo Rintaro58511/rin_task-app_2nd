@@ -11,6 +11,7 @@ from datetime import datetime, timedelta, timezone
 from schemas.auth import TokenData, Token
 from typing import Annotated
 from models.user import User
+import traceback
 
 
 router = APIRouter(prefix="/user")
@@ -28,9 +29,8 @@ async def signup_user(
             user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
         )
         return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
-    except HTTPException as he:
-        raise he
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail="ユーザーの登録に失敗しました。")
 
 

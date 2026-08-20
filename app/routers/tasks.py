@@ -54,7 +54,7 @@ async def search_task(
 ) -> TaskSchema:
     """指定されたIDのタスク詳細を取得する"""
 
-    task = await fetch_task(task_id, db_session)
+    task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if task is None:
         raise HTTPException(status_code=404, detail="指定されたタスクが見つかりません")
@@ -130,7 +130,7 @@ async def update_task(
 ) -> ResponseSchema:
     """指定されたIDのタスク情報を更新する"""
 
-    target_task = await fetch_task(task_id, db_session)
+    target_task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if task.task_deadline < date.today():
         raise HTTPException(status_code=400, detail="期限が過去の日付になっています")
@@ -163,7 +163,7 @@ async def delete_task(
 ) -> ResponseSchema:
     """指定されたIDのタスクを削除する"""
 
-    deleted_task = await fetch_task(task_id, db_session)
+    deleted_task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if deleted_task is None:
         raise HTTPException(status_code=404, detail="指定されたタスクが見つかりません")

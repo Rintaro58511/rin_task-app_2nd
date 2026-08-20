@@ -1,4 +1,4 @@
-const apiUrl = "http://localhost:8002/user/token"
+const apiUrl = "https://d25ee7cqp3i4lf.cloudfront.net/user/token"
 
 function displayMessage(messages){
     const container = document.getElementById('errorContainer');

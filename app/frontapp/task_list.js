@@ -1,4 +1,4 @@
-const apiUrl = "http://localhost:8002/tasks"
+const apiUrl = "https://d25ee7cqp3i4lf.cloudfront.net/tasks";
 let currentSort = localStorage.getItem('currentSort') || null;
 
 function getCreateAndUpdateTime(){
@@ -512,7 +512,7 @@ profileButton.addEventListener('click', async function(event){
     const response = await send_request({
             method: 'GET',
             token: token,
-            url: 'http://localhost:8002/user/me'
+            url: 'https://d25ee7cqp3i4lf.cloudfront.net/user/me'
         });
 
     const profile = await response.json();

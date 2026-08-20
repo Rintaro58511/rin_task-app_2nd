@@ -1,4 +1,4 @@
-const apiUrl = "http://localhost:8002/user/signup"
+const apiUrl = "https://d25ee7cqp3i4lf.cloudfront.net/user/signup"
 
 function displayMessage(messages){
 const container = document.getElementById('errorContainer');
