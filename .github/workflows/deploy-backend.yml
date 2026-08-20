@@ -31,6 +31,12 @@ jobs:
           role-to-assume: arn:aws:iam::538498973932:role/rin-task-app-github-actions-role
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -41,11 +47,12 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build \
+          docker buildx build \
+            --platform linux/arm64 \
             --target production \
             -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+            --push \
             .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Download current task definition
