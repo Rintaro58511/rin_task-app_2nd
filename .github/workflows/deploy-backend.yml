@@ -52,6 +52,7 @@ jobs:
 
       - name: Run tests
         env:
+          PYTHONPATH: app
           DATABASE_USER_TEST: test_user
           DATABASE_PASSWORD_TEST: test_password
           DATABASE_HOST_TEST: localhost
