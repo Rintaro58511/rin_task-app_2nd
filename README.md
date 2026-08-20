@@ -1,132 +1,325 @@
-# タスク管理アプリケーション (Task Management App)
+# Task Management App
 
-ログイン認証を備えた、シンプルで直感的に操作できるタスク管理Webアプリケーションです。  
-ユーザーごとのタスク追加・編集・削除・ステータス変更や、期限・ステータス順でのソート・検索機能を備えています。
+FastAPI / PostgreSQL を中心に構築した、ユーザー認証付きのタスク管理 Web
+アプリケーションです。
 
----
+タスクの CRUD、進捗管理、検索・ソート、サブタスク管理に加え、AWS
+上への本番デプロイと GitHub Actions による CI/CD まで実装しています。
 
-## 🛠 使用技術 (Tech Stack)
+**公開URL:** https://d25ee7cqp3i4lf.cloudfront.net/
 
-### バックエンド (Backend)
-- **Python** Python 3.13
-- **FastAPI** (Webフレームワーク)
-- **SQLAlchemy** (非同期ORM / `AsyncSession`)
-- **Pydantic** (データバリデーション)
-- **Pytest** (自動テスト)
-- **PostgreSQL** (データベース)
+------------------------------------------------------------------------
 
-### フロントエンド (Frontend)
-- **HTML5 / CSS3**
-- **JavaScript (ES6+)** (Fetch API)
+## Features
 
-### インフラ・環境 / 認証
-- **Docker / Docker Compose** (コンテナ環境)
-- **OAuth2 / JWT** (ユーザー認証)
-- **Git / GitHub**
+-   ユーザー登録・ログイン
+-   OAuth2 / JWT を利用した認証
+-   ユーザー単位でのタスク管理
+-   タスクの作成・取得・更新・削除
+-   タスクのステータス・進捗率・コメント管理
+-   タスク名による検索
+-   期限・ステータスによるソート
+-   サブタスクの作成・更新・削除
+-   他ユーザーのタスクへのアクセス制御
+-   Pytest による API / CRUD の自動テスト
+-   GitHub Actions によるバックエンド・フロントエンドの自動デプロイ
 
----
+------------------------------------------------------------------------
 
-## 🚀 主な機能 (Features)
+## Tech Stack
 
-- **ユーザー管理**: サインアップ、ログイン（認証トークン発行）
-- **タスクCRUD機能**:
-  - タスクの新規作成（タイトル、詳細、期限、ステータス）
-  - ユーザー所有タスクの一覧表示
-  - タスク詳細の参照・編集・削除
-- **絞り込み・並び替え**:
-  - 期限（Deadline）順・ステータス（Status）順のソート
-  - タスク名による部分一致検索（あいまい検索）
-- **セキュリティ・権限管理**: 他ユーザーのタスク閲覧・編集を制御
+  Category             Technology
+  -------------------- -----------------------------------------------------
+  Backend              Python 3.13 / FastAPI
+  ORM                  SQLAlchemy (AsyncSession)
+  Validation           Pydantic
+  Database             PostgreSQL
+  Authentication       OAuth2 / JWT
+  Frontend             HTML / CSS / JavaScript (Fetch API)
+  Test                 Pytest / HTTPX
+  Container            Docker / Docker Compose
+  Cloud                AWS CloudFront / S3 / ALB / ECS Fargate / ECR / RDS
+  CI/CD                GitHub Actions
+  AWS Authentication   GitHub Actions OIDC / IAM Role
 
----
+------------------------------------------------------------------------
 
-## 💻 起動方法 (How to Run)
+## Architecture
 
-### 前提条件 (Prerequisites)
+本番環境では、フロントエンドの静的ファイルを S3 に配置し、CloudFront
+をエントリーポイントとして配信しています。 バックエンドは Docker
+コンテナとして ECS Fargate 上で稼働し、ALB
+経由でアクセスします。データベースには RDS for PostgreSQL
+を使用しています。
 
-- [Docker](https://www.docker.com/) / [Docker Desktop](https://www.docker.com/products/docker-desktop/)
-- Docker Compose
+``` mermaid
+flowchart LR
+    User[User / Browser]
 
-### 1. リポジトリのクローン
+    subgraph AWS
+        CF[CloudFront]
+        S3[S3<br/>Frontend]
+        ALB[Application Load Balancer]
+        ECS[ECS Fargate<br/>FastAPI]
+        RDS[(RDS<br/>PostgreSQL)]
+        ECR[ECR]
+    end
 
+    User -->|HTTPS| CF
+    CF -->|Static files| S3
+    CF -->|API requests| ALB
+    ALB --> ECS
+    ECS --> RDS
+    ECR --> ECS
 ```
+
+### AWS services
+
+-   **CloudFront**: フロントエンド配信と API
+    アクセスのエントリーポイント
+-   **S3**: HTML / CSS / JavaScript の静的ファイルを配置
+-   **ALB**: API リクエストを ECS
+    タスクへルーティングし、ヘルスチェックを実施
+-   **ECS Fargate**: FastAPI の Docker コンテナを実行
+-   **ECR**: 本番用 Docker イメージを保存
+-   **RDS for PostgreSQL**: 本番データを永続化
+-   **IAM / OIDC**: GitHub Actions から AWS へ長期 Access Key
+    を保存せず認証
+
+------------------------------------------------------------------------
+
+## CI/CD
+
+### Backend
+
+`main` ブランチへの push を契機に GitHub Actions を実行します。
+
+``` mermaid
+flowchart LR
+    Push[Push to main]
+    TestDB[(PostgreSQL Test DB)]
+    Pytest[Pytest]
+    Build[Docker Buildx<br/>linux/arm64]
+    ECR[ECR]
+    ECS[ECS Fargate]
+    Health[ALB Health Check]
+
+    Push --> TestDB
+    TestDB --> Pytest
+    Pytest -->|Success| Build
+    Pytest -->|Failure| Stop[Stop]
+    Build --> ECR
+    ECR --> ECS
+    ECS --> Health
+```
+
+1.  GitHub Actions 上にテスト用 PostgreSQL を起動
+2.  Pytest を実行
+3.  テスト成功時のみ Docker イメージをビルド
+4.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
+5.  ECR へイメージを push
+6.  ECS Task Definition を更新
+7.  ECS Service へローリングデプロイ
+8.  ALB のヘルスチェックを通過後、デプロイ完了
+
+GitHub Actions から AWS への認証には OIDC を利用し、AWS の長期 Access
+Key / Secret Access Key を GitHub に保存しない構成にしています。
+
+### Frontend
+
+`app/frontapp/**` に変更がある場合のみフロントエンド用 Workflow
+を実行します。
+
+``` text
+Push to main
+    ↓
+GitHub Actions
+    ↓
+S3 Sync
+    ↓
+CloudFront Invalidation
+    ↓
+Deploy Complete
+```
+
+------------------------------------------------------------------------
+
+## Security
+
+-   JWT による API 認証
+-   ユーザー ID に基づくタスク所有者チェック
+-   他ユーザーのタスクへのアクセス制御
+-   CORS の許可 Origin を環境ごとに管理
+-   RDS の PostgreSQL ポートをインターネットへ直接公開せず、ECS の
+    Security Group からの通信に制限
+-   GitHub Actions → AWS の認証に OIDC を使用
+-   本番用 Secret / DB 接続情報をソースコードへ直接記述しない
+
+------------------------------------------------------------------------
+
+## Testing
+
+Pytest を利用し、CRUD ロジックと FastAPI の API
+エンドポイントをテストしています。
+
+主なテスト対象は、ユーザー登録、ログイン / JWT
+発行、ユーザー情報取得、タスク
+CRUD、検索、認証・所有者チェック、サブタスク関連処理です。
+
+API テストでは HTTPX の `AsyncClient` / `ASGITransport`
+を利用し、FastAPI の Dependency Override や Mock
+を使って依存関係を切り替えています。
+
+GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
+を実行し、テストが失敗した場合は本番デプロイへ進まないようにしています。
+
+------------------------------------------------------------------------
+
+## Project Structure
+
+``` text
+.
+├── .github/
+│   └── workflows/            # GitHub Actions
+├── app/
+│   ├── cruds/                # SQLAlchemy を利用した DB 操作
+│   ├── frontapp/             # HTML / CSS / JavaScript
+│   ├── models/               # SQLAlchemy Model
+│   ├── routers/              # FastAPI Router
+│   ├── schemas/              # Pydantic Schema
+│   ├── db.py                 # DB 接続設定
+│   ├── enums.py              # Enum 定義
+│   ├── init_database.py      # DB 初期化
+│   └── main.py               # FastAPI エントリーポイント
+├── tests/                    # Pytest
+├── Dockerfile
+├── docker-compose.yml
+├── docker-compose.prod.yml
+├── requirements.txt
+└── README.md
+```
+
+------------------------------------------------------------------------
+
+## Local Development
+
+### Prerequisites
+
+-   Docker
+-   Docker Compose
+
+### 1. Clone
+
+``` bash
 git clone https://github.com/Rintaro58511/rin_task-app_2nd.git
 cd rin_task-app_2nd
 ```
 
-### 2. コンテナの起動
+### 2. Environment variables
 
-```
+`.env.example` を参考に、ローカル開発用の `.env`
+を作成してください。本番用の Secret や DB パスワードを Git
+にコミットしないでください。
+
+### 3. Start containers
+
+``` bash
 docker compose up -d --build
 ```
 
-### 3. 動作確認
+### 4. API
 
-起動後、以下へアクセスできます。
+-   FastAPI: `http://localhost:8002`
+-   Swagger UI: `http://localhost:8002/docs`
 
-API: http://localhost:8002
-Swagger UI: http://localhost:8002/docs
-2. フロントエンドの起動
+### 5. Frontend
 
-フロントエンドはVS Code拡張機能のLive Serverを使用します。
+`app/frontapp/login.html` を Live Server などのローカル HTTP
+サーバーから開きます。
 
-VS Codeに「Live Server」をインストール
-app/frontapp/login.htmlを開く
-右クリックして「Open with Live Server」を選択
+### 6. Run tests
 
-例:
-
-http://127.0.0.1:5500/task_management/app/frontapp/login.html
-
-※ URLのパスはローカルのディレクトリ構成によって異なる場合があります。
-
-### 4. コンテナの停止
-
+``` bash
+docker compose exec app pytest
 ```
+
+### 7. Stop
+
+``` bash
 docker compose down
 ```
 
-### 📄 ディレクトリ構造 (Directory Structure)
+------------------------------------------------------------------------
+
+## Design / Implementation Highlights
+
+### 1. 非同期 DB アクセス
+
+FastAPI と SQLAlchemy の `AsyncSession` を利用し、DB I/O
+を非同期で扱う構成にしています。
+
+### 2. Router / CRUD / Schema / Model の責務分離
+
+API エンドポイント、DB 操作、入力・出力スキーマ、DB
+モデルを分離し、変更箇所の影響範囲を抑えられる構成を意識しています。
+
+### 3. 認証だけでなく認可も実装
+
+ログインできるかだけでなく、取得・更新・削除しようとしているタスクが認証ユーザー自身のものかを確認し、他ユーザーのデータへアクセスできないようにしています。
+
+### 4. Docker multi-stage build
+
+Docker の multi-stage build
+を利用し、開発環境と本番環境で必要な内容を分離しています。
+
+### 5. CI/CD
+
+デプロイ前に Pytest
+を実行し、テストに成功した変更だけを本番へ反映します。フロントエンドも
+S3 同期と CloudFront Invalidation を自動化しています。
+
+------------------------------------------------------------------------
+
+## Problems Solved During Development
+
+### CPU architecture mismatch
+
+GitHub Actions で生成した Docker イメージと ECS Fargate の CPU
+アーキテクチャが一致せず、次のエラーが発生しました。
+
+``` text
+exec /opt/venv/bin/uvicorn: exec format error
 ```
-.
-├── Dockerfile
-├── README.md
-├── docker-compose.yml
-├── requirements.txt
-├── app/
-│   ├── cruds/            # DB操作ロジック (SQLAlchemy)
-│   │   ├── tasks.py
-│   │   └── user.py
-│   ├── frontapp/         # フロントエンド画面・スクリプト
-│   │   ├── login.html
-│   │   ├── login.js
-│   │   ├── signup.html
-│   │   ├── signup.js
-│   │   ├── task_list.html
-│   │   └── task_list.js
-│   ├── models/           # DBモデル定義
-│   │   ├── tasks.py
-│   │   └── user.py
-│   ├── routers/          # APIエンドポイント定義 (FastAPI)
-│   │   ├── tasks.py
-│   │   └── user.py
-│   ├── schemas/          # Pydanticスキーマ定義
-│   │   ├── auth.py
-│   │   ├── tasks.py
-│   │   └── user.py
-│   ├── db.py             # DB接続設定
-│   ├── enums.py          # 定数・Enum定義
-│   ├── init_database.py  # DB初期化処理
-│   └── main.py           # アプリケーションエントリーポイント
-└── tests/                # テストコード (Pytest)
-    ├── task_router/      # タスクAPI用テスト
-    │   ├── test_create_task.py
-    │   ├── test_delete_task.py
-    │   ├── test_get_tasks.py
-    │   └── test_search_task.py
-    ├── test_task_crud.py # CRUD・認証用テスト
-    ├── test_user_crud.py
-    ├── test_user_login.py
-    ├── test_user_me.py
-    └── test_user_signup.py
-```
+
+ECS を ARM64 で構成していたため、GitHub Actions に QEMU / Docker Buildx
+を導入し、`linux/arm64` を明示してイメージを生成することで解決しました。
+
+### Differences between local and CI environments
+
+ローカル Docker では成功していたテストが GitHub Actions
+上で失敗し、`PYTHONPATH` やテスト用 `SECRET_KEY`
+などの環境差を発見しました。CI 上でも必要な環境変数と PostgreSQL
+テスト環境を明示することで解決しました。
+
+### Authentication / authorization tests
+
+タスク所有者チェック追加後に既存テストとの不整合を検出しました。Dependency
+Override
+を利用して認証ユーザーを明示し、正常系・存在しないタスク・他ユーザーのタスクへのアクセスを分けてテストするよう修正しました。
+
+------------------------------------------------------------------------
+
+## Future Improvements
+
+-   CloudFront / ALB 周辺のさらなるセキュリティ強化
+-   DB マイグレーションツールの導入
+-   ログ・監視・アラートの強化
+-   テストカバレッジの可視化
+-   GitHub Actions の CI Job / Deploy Job の分離
+-   フロントエンドのコンポーネント化・UI 改善
+
+------------------------------------------------------------------------
+
+## Repository
+
+https://github.com/Rintaro58511/rin_task-app_2nd
