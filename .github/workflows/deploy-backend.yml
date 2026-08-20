@@ -58,6 +58,7 @@ jobs:
           DATABASE_HOST_TEST: localhost
           DATABASE_PORT_TEST: 5432
           DATABASE_NAME_TEST: test_db
+          SECRET_KEY: test-secret-key
         run: pytest -v
 
       - name: Configure AWS credentials
