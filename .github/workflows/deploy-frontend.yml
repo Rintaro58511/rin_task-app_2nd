@@ -1,0 +1,41 @@
+name: Deploy Frontend to S3
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "app/frontapp/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-northeast-1
+  S3_BUCKET: rin-task-app-front
+  CLOUDFRONT_DISTRIBUTION_ID: EV5CGIBII36WA
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::538498973932:role/rin-task-app-github-actions-role
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sync frontend to S3
+        run: |
+          aws s3 sync app/frontapp/ s3://$S3_BUCKET/frontapp/ --delete
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+            --paths "/*"
