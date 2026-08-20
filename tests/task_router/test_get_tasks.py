@@ -1,4 +1,3 @@
-from unittest.mock import AsyncMock, MagicMock
 import pytest
 import routers.user as user
 import routers.tasks as task
@@ -8,33 +7,6 @@ import uuid
 from datetime import datetime, date
 from models.tasks import Task
 from enums import TaskStatus
-import db
-
-
-@pytest.fixture
-def override_get_current_user():
-
-    async def override_user():
-        yield AsyncMock()
-
-    app.dependency_overrides[user.get_current_user] = override_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
 
 
 @pytest.mark.anyio

@@ -29,9 +29,15 @@ async def signup_user(
             user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
         )
         return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
-    except Exception as e:
+    except HTTPException as he:
+        raise he
+
+    except Exception:
         traceback.print_exc()
-        raise HTTPException(status_code=400, detail="ユーザーの登録に失敗しました。")
+        raise HTTPException(
+            status_code=400,
+            detail="ユーザーの登録に失敗しました。"
+        )
 
 
 SECRET_KEY = os.getenv("SECRET_KEY")

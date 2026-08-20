@@ -45,7 +45,7 @@ async def test_fetch_task():
     mock_result.scalars.return_value = mock_scalars
     mock_scalars.first.return_value = expected_task
 
-    retrieved_task = await fetch_task(task_id, mock_db)
+    retrieved_task = await fetch_task(task_id, user_id, mock_db)
 
     assert retrieved_task.task_name == "test_task"
     assert retrieved_task.task_deadline == date(2026, 8, 1)

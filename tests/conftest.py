@@ -228,3 +228,39 @@ def override_get_current_user():
     yield
 
     app.dependency_overrides.clear()
+
+@pytest.fixture
+def override_get_current_task_user(task):
+
+    async def override_user():
+        yield User(
+            user_id=task.user_id,
+            user_name="test_user",
+            email="test@example.com",
+            hashed_password="test",
+            is_active=True,
+        )
+
+    app.dependency_overrides[user.get_current_user] = override_user
+
+    yield
+
+    app.dependency_overrides.clear()
+
+@pytest.fixture
+def override_get_current_other_task_user(other_task):
+
+    async def override_user():
+        yield User(
+            user_id=other_task.user_id,
+            user_name="test_other_user",
+            email="other@example.com",
+            hashed_password="test",
+            is_active=True,
+        )
+
+    app.dependency_overrides[user.get_current_user] = override_user
+
+    yield
+
+    app.dependency_overrides.clear()
