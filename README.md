@@ -108,7 +108,7 @@ flowchart LR
 
     Push --> TestDB
     TestDB --> Pytest
-    Pytest --> Alembictest
+    Pytest --> AlembicTest
     AlembicTest -->|Success| Build
     AlembicTest -->|Failure| Stop[Stop]
     Build --> ECR
