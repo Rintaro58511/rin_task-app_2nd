@@ -189,7 +189,6 @@ GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
 │   ├── schemas/              # Pydantic Schema
 │   ├── db.py                 # DB 接続設定
 │   ├── enums.py              # Enum 定義
-│   ├── init_database.py      # DB 初期化
 │   └── main.py               # FastAPI エントリーポイント
 ├── tests/                    # Pytest
 ├── Dockerfile

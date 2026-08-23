@@ -5,10 +5,12 @@ from sqlalchemy import (
     Boolean,
     String,
     DateTime,
+    Enum as SQLEnum,
 )
 import uuid
 from datetime import datetime
 from db import Base
+from enums import SubTaskPriority
 
 class SubTask(Base):
     """サブタスク情報を管理するテーブル"""
@@ -28,5 +30,8 @@ class SubTask(Base):
     )
     created_at: Mapped[datetime] =  mapped_column(
         DateTime, nullable=False, default=datetime.now
+    )
+    priority: Mapped[SubTaskPriority] = mapped_column(
+        SQLEnum(SubTaskPriority), default=SubTaskPriority.MEDIUM, nullable=False
     )
     task: Mapped["Task"] = relationship("Task", back_populates="subtasks")

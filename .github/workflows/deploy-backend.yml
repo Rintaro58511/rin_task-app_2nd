@@ -53,11 +53,11 @@ jobs:
       - name: Run tests
         env:
           PYTHONPATH: app
-          DATABASE_USER_TEST: test_user
-          DATABASE_PASSWORD_TEST: test_password
-          DATABASE_HOST_TEST: localhost
-          DATABASE_PORT_TEST: 5432
-          DATABASE_NAME_TEST: test_db
+          DATABASE_USER: test_user
+          DATABASE_PASSWORD: test_password
+          DATABASE_HOST: localhost
+          DATABASE_PORT: 5432
+          DATABASE_NAME: test_db
           SECRET_KEY: test-secret-key
         run: pytest -v
 
@@ -113,3 +113,18 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+          run-task: true
+          run-task-launch-type: FARGATE
+          run-task-container-overrides: |
+            [
+              {
+                "name": "${{ env.CONTAINER_NAME }}",
+                "command": ["alembic", "current"]
+              }
+            ]
+
+          run-task-subnets: subnet-0fa4de622fa74de87,subnet-0ec3c7b986b9d7ae0,subnet-070b331866ae3f9c7
+          run-task-security-groups: sg-0b4689362453a9a7a
+          run-task-assign-public-IP: ENABLED
+          wait-for-task-stopped: true
