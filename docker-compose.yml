@@ -48,6 +48,33 @@ services:
     restart: unless-stopped
     networks:
       - backend
+  
+  app-test:
+    build:
+      context: .
+    init: true
+    env_file:
+      - .env
+    environment:
+      environment:
+      DATABASE_USER: ${POSTGRES_USER_TEST:?POSTGRES_USER_TEST is required}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD_TEST:?POSTGRES_PASSWORD_TEST is required}
+      DATABASE_HOST: db-test
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${POSTGRES_DB_TEST:?POSTGRES_DB_TEST is required}
+    volumes:
+      - ./tests:/usr/src/app/tests
+    depends_on:
+      db-test:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp
+    networks:
+      - backend
 
   db-test:
     image: postgres:16-alpine

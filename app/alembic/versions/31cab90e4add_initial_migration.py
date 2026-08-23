@@ -67,6 +67,6 @@ def downgrade() -> None:
 
     connection = op.get_bind()
 
-    subtask_priority_enum.drop(op.get_bind(connection))
-    task_status_enum.drop(op.get_bind(connection))
+    subtask_priority_enum.drop(connection)
+    task_status_enum.drop(connection)
     # ### end Alembic commands ###
