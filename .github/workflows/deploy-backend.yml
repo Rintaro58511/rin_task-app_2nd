@@ -171,7 +171,7 @@ jobs:
               }
             ]
 
-          run-task-subnets: subnet-0fa4de622fa74de87,subnet-0ec3c7b986b9d7ae0,subnet-070b331866ae3f9c7
+          run-task-subnets: subnet-0fa4de622fa74de87,subnet-070b331866ae3f9c7
           run-task-security-groups: sg-0b4689362453a9a7a
           run-task-assign-public-IP: ENABLED
           wait-for-task-stopped: true
