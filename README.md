@@ -32,8 +32,8 @@ FastAPI / PostgreSQL を中心に構築した、ユーザー認証付きのタ�
   -------------------- -----------------------------------------------------
   Backend              Python 3.13 / FastAPI
   ORM                  SQLAlchemy (AsyncSession)
-  Validation           Pydantic
-  Database             PostgreSQL
+  Validation / Settings    Pydantic / pydantic-settings
+  Database / Migration     PostgreSQL / Alembic
   Authentication       OAuth2 / JWT
   Frontend             HTML / CSS / JavaScript (Fetch API)
   Test                 Pytest / HTTPX
@@ -101,7 +101,8 @@ flowchart LR
     Pytest[Pytest]
     Build[Docker Buildx<br/>linux/arm64]
     ECR[ECR]
-    ECS[ECS Fargate]
+    Migration["ECS one-off Task<br/>alembic upgrade head"]
+    ECS[ECS Service Deploy]
     Health[ALB Health Check]
 
     Push --> TestDB
@@ -109,7 +110,9 @@ flowchart LR
     Pytest -->|Success| Build
     Pytest -->|Failure| Stop[Stop]
     Build --> ECR
-    ECR --> ECS
+    ECR --> Migration
+    Migration --> |Success| ECS
+    Migration --> |Failure| Stop[Stop]
     ECS --> Health
 ```
 
@@ -118,9 +121,10 @@ flowchart LR
 3.  テスト成功時のみ Docker イメージをビルド
 4.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
 5.  ECR へイメージを push
-6.  ECS Task Definition を更新
-7.  ECS Service へローリングデプロイ
-8.  ALB のヘルスチェックを通過後、デプロイ完了
+6. ECS Task Definition を更新
+7. ECS one-off Taskで `alembic upgrade head` を実行
+8. migration成功時のみECS Serviceへローリングデプロイ
+9. ALBのヘルスチェックを通過後、デプロイ完了
 
 GitHub Actions から AWS への認証には OIDC を利用し、AWS の長期 Access
 Key / Secret Access Key を GitHub に保存しない構成にしています。
@@ -182,12 +186,15 @@ GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
 ├── .github/
 │   └── workflows/            # GitHub Actions
 ├── app/
-│   ├── cruds/                # SQLAlchemy を利用した DB 操作
+│   ├── alembic/              # Migration scripts
+│   ├── alembic.ini           # Alembic configuration
+│   ├── cruds/                # SQLAlchemyを利用したDB操作
 │   ├── frontapp/             # HTML / CSS / JavaScript
 │   ├── models/               # SQLAlchemy Model
 │   ├── routers/              # FastAPI Router
 │   ├── schemas/              # Pydantic Schema
-│   ├── db.py                 # DB 接続設定
+│   ├── config.py             # 環境変数・アプリ設定
+│   ├── db.py                 # DB Engine / Session設定
 │   ├── enums.py              # Enum 定義
 │   └── main.py               # FastAPI エントリーポイント
 ├── tests/                    # Pytest
@@ -200,53 +207,31 @@ GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
 
 ------------------------------------------------------------------------
 
-## Local Development
+## Migrationの運用
 
-### Prerequisites
+### 1. Alembic導入の背景
 
--   Docker
--   Docker Compose
+従来は初期化処理によってテーブルを作成していましたが、この方式ではDBスキーマの変更履歴を管理できず、デプロイ時のスキーマ更新も手動で行う必要がありました。
 
-### 1. Clone
+そこでAlembicを導入し、DBスキーマの変更をmigration fileとしてバージョン管理する構成へ変更しました。
 
-``` bash
-git clone https://github.com/Rintaro58511/rin_task-app_2nd.git
-cd rin_task-app_2nd
-```
+### 2. DB設定の共通化
 
-### 2. Environment variables
+開発・テスト・本番でDB接続用の環境変数名を統一し、pydantic-settings によって必須値や型を起動時に検証する構成にしました。
 
-`.env.example` を参考に、ローカル開発用の `.env`
-を作成してください。本番用の Secret や DB パスワードを Git
-にコミットしないでください。
+### 3. Alembicの非同期対応
 
-### 3. Start containers
+AsyncEngine / asyncpg で接続し、AsyncConnection.run_sync() を介してAlembicのmigration処理を実行する構成にしました。
 
-``` bash
-docker compose up -d --build
-```
+### 4. CI/CDへのmigration組み込み
 
-### 4. API
+アプリコンテナ起動時にmigrationを実行すると、複数のECS Taskが同時にmigrationを実行する可能性があるため、Serviceとは分離したone-off Taskで実行しています。Migrationが失敗した場合はECS Serviceの更新へ進まず、DBスキーマとアプリケーションの不整合を防ぐ構成にしています。
 
--   FastAPI: `http://localhost:8002`
--   Swagger UI: `http://localhost:8002/docs`
-
-### 5. Frontend
-
-`app/frontapp/login.html` を Live Server などのローカル HTTP
-サーバーから開きます。
-
-### 6. Run tests
-
-``` bash
-docker compose exec app pytest
-```
-
-### 7. Stop
-
-``` bash
-docker compose down
-```
+ECS one-off Task
+   ↓
+alembic upgrade head
+   ↓
+ECS Service deploy
 
 ------------------------------------------------------------------------
 
@@ -311,7 +296,6 @@ Override
 ## Future Improvements
 
 -   CloudFront / ALB 周辺のさらなるセキュリティ強化
--   DB マイグレーションツールの導入
 -   ログ・監視・アラートの強化
 -   テストカバレッジの可視化
 -   GitHub Actions の CI Job / Deploy Job の分離
