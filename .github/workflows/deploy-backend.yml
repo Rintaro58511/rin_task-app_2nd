@@ -121,7 +121,7 @@ jobs:
             [
               {
                 "name": "${{ env.CONTAINER_NAME }}",
-                "command": ["alembic", "current"]
+                "command": ["alembic", "upgrade", "head"]
               }
             ]
 
