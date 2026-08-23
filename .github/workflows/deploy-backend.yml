@@ -4,10 +4,27 @@ on:
   push:
     branches:
       - main
+    paths:
+      - app/models/**
+      - app/routers/**
+      - app/cruds/**
+      - app/schemas/**
+      - app/service/**
+      - app/alembic/**
+      - app/alembic.ini
+      - app/db.py
+      - app/config.py
+      - app/enums.py
+      - app/main.py
+      - tests/**
+      - Dockerfile
+      - docker-compose.yml
+      - docker-compose.prod.yml
+      - requirements.txt
+      - .github/workflows/deploy-backend.yml
 
 permissions:
   contents: read
-  id-token: write
 
 env:
   AWS_REGION: ap-northeast-1
@@ -18,7 +35,7 @@ env:
   CONTAINER_NAME: rin-task-app
 
 jobs:
-  deploy:
+  ci:
     runs-on: ubuntu-latest
 
     services:
@@ -61,6 +78,19 @@ jobs:
           SECRET_KEY: test-secret-key
         run: pytest -v
 
+  deploy:
+    needs: ci
+
+    permissions:
+      contents: read
+      id-token: write
+    
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:
