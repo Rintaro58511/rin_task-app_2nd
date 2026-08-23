@@ -14,20 +14,15 @@ from main import app
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 import os
 from sqlalchemy import URL
-
-DATABASE_USER_TEST = os.getenv("DATABASE_USER_TEST")
-DATABASE_PASSWORD_TEST = os.getenv("DATABASE_PASSWORD_TEST")
-DATABASE_HOST_TEST = os.getenv("DATABASE_HOST_TEST")
-DATABASE_PORT_TEST = os.getenv("DATABASE_PORT_TEST")
-DATABASE_NAME_TEST = os.getenv("DATABASE_NAME_TEST")
+from config import settings
 
 TEST_ASYNC_DB_URL = URL.create(
     drivername="postgresql+asyncpg",
-    username=DATABASE_USER_TEST,
-    password=DATABASE_PASSWORD_TEST,
-    host=DATABASE_HOST_TEST,
-    port=DATABASE_PORT_TEST,
-    database=DATABASE_NAME_TEST,
+    username=settings.database_user,
+    password=settings.database_password,
+    host=settings.database_host,
+    port=settings.database_port,
+    database=settings.database_name,
 )
 
 test_async_engine = create_async_engine(TEST_ASYNC_DB_URL, echo=True)
