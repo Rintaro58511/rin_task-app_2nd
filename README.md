@@ -233,12 +233,6 @@ AsyncEngine / asyncpg で接続し、AsyncConnection.run_sync() を介してAlem
 Serviceとは分離したone-off Taskで実行しています。
 Migrationが失敗した場合はECS Serviceの更新へ進まず、DBスキーマとアプリケーションの不整合を防ぐ構成にしています。
 
-ECS one-off Task
-   ↓
-alembic upgrade head
-   ↓
-ECS Service deploy
-
 ------------------------------------------------------------------------
 
 ## Design / Implementation Highlights
