@@ -38,6 +38,15 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    env:
+      PYTHONPATH: app
+      DATABASE_USER: test_user
+      DATABASE_PASSWORD: test_password
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_NAME: test_db
+      SECRET_KEY: test-secret-key
+
     services:
       postgres:
         image: postgres:16-alpine
@@ -67,16 +76,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run tests
-        env:
-          PYTHONPATH: app
-          DATABASE_USER: test_user
-          DATABASE_PASSWORD: test_password
-          DATABASE_HOST: localhost
-          DATABASE_PORT: 5432
-          DATABASE_NAME: test_db
-          SECRET_KEY: test-secret-key
+      - name: Run pytests
         run: pytest -v
+    
+      - name: Run migration upgrade test
+        run: |
+          cd app
+          alembic upgrade head
+      
+      - name: Run migration downgrade test
+        run: |
+          cd app
+          alembic downgrade base
+      
+      - name: Run migration upgrade retest
+        run: |
+          cd app
+          alembic upgrade head
 
   deploy:
     needs: ci
