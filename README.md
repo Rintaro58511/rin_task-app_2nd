@@ -99,6 +99,7 @@ flowchart LR
     Push[Push to main]
     TestDB[(PostgreSQL Test DB)]
     Pytest[Pytest]
+    AlembicTest["Migration Test<br/>upgrade → downgrade → upgrade"]
     Build[Docker Buildx<br/>linux/arm64]
     ECR[ECR]
     Migration["ECS one-off Task<br/>alembic upgrade head"]
@@ -107,8 +108,9 @@ flowchart LR
 
     Push --> TestDB
     TestDB --> Pytest
-    Pytest -->|Success| Build
-    Pytest -->|Failure| Stop[Stop]
+    Pytest --> Alembictest
+    AlembicTest -->|Success| Build
+    AlembicTest -->|Failure| Stop[Stop]
     Build --> ECR
     ECR --> Migration
     Migration --> |Success| ECS
@@ -118,13 +120,14 @@ flowchart LR
 
 1.  GitHub Actions 上にテスト用 PostgreSQL を起動
 2.  Pytest を実行
-3.  テスト成功時のみ Docker イメージをビルド
-4.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
-5.  ECR へイメージを push
-6. ECS Task Definition を更新
-7. ECS one-off Taskで `alembic upgrade head` を実行
-8. migration成功時のみECS Serviceへローリングデプロイ
-9. ALBのヘルスチェックを通過後、デプロイ完了
+3. Alembicの upgrade → downgrade → upgrade を実行し、migrationの適用・ロールバック・再適用が正常に行えることを検証
+4.  テスト成功時のみ Docker イメージをビルド
+5.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
+6.  ECR へイメージを push
+7. ECS Task Definition を更新
+8. ECS one-off Taskで `alembic upgrade head` を実行
+9. migration成功時のみECS Serviceへローリングデプロイ
+10. ALBのヘルスチェックを通過後、デプロイ完了
 
 GitHub Actions から AWS への認証には OIDC を利用し、AWS の長期 Access
 Key / Secret Access Key を GitHub に保存しない構成にしています。
@@ -211,7 +214,8 @@ GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
 
 ### 1. Alembic導入の背景
 
-従来は初期化処理によってテーブルを作成していましたが、この方式ではDBスキーマの変更履歴を管理できず、デプロイ時のスキーマ更新も手動で行う必要がありました。
+従来は初期化処理によってテーブルを作成していましたが、この方式ではDBスキーマの変更履歴を管理できず、
+デプロイ時のスキーマ更新も手動で行う必要がありました。
 
 そこでAlembicを導入し、DBスキーマの変更をmigration fileとしてバージョン管理する構成へ変更しました。
 
@@ -225,7 +229,9 @@ AsyncEngine / asyncpg で接続し、AsyncConnection.run_sync() を介してAlem
 
 ### 4. CI/CDへのmigration組み込み
 
-アプリコンテナ起動時にmigrationを実行すると、複数のECS Taskが同時にmigrationを実行する可能性があるため、Serviceとは分離したone-off Taskで実行しています。Migrationが失敗した場合はECS Serviceの更新へ進まず、DBスキーマとアプリケーションの不整合を防ぐ構成にしています。
+アプリコンテナ起動時にmigrationを実行すると、複数のECS Taskが同時にmigrationを実行する可能性があるため、
+Serviceとは分離したone-off Taskで実行しています。
+Migrationが失敗した場合はECS Serviceの更新へ進まず、DBスキーマとアプリケーションの不整合を防ぐ構成にしています。
 
 ECS one-off Task
    ↓
@@ -249,7 +255,8 @@ API エンドポイント、DB 操作、入力・出力スキーマ、DB
 
 ### 3. 認証だけでなく認可も実装
 
-ログインできるかだけでなく、取得・更新・削除しようとしているタスクが認証ユーザー自身のものかを確認し、他ユーザーのデータへアクセスできないようにしています。
+ログインできるかだけでなく、取得・更新・削除しようとしているタスクが認証ユーザー自身のものかを確認し、
+他ユーザーのデータへアクセスできないようにしています。
 
 ### 4. Docker multi-stage build
 
@@ -258,9 +265,8 @@ Docker の multi-stage build
 
 ### 5. CI/CD
 
-デプロイ前に Pytest
-を実行し、テストに成功した変更だけを本番へ反映します。フロントエンドも
-S3 同期と CloudFront Invalidation を自動化しています。
+デプロイ前に Pytest と Alembic migration の upgrade → downgrade → upgrade を実行し、
+アプリケーションテストとDBスキーマ変更の検証に成功した変更だけを本番へ反映します。
 
 ------------------------------------------------------------------------
 
@@ -289,7 +295,19 @@ ECS を ARM64 で構成していたため、GitHub Actions に QEMU / Docker Bui
 
 タスク所有者チェック追加後に既存テストとの不整合を検出しました。Dependency
 Override
-を利用して認証ユーザーを明示し、正常系・存在しないタスク・他ユーザーのタスクへのアクセスを分けてテストするよう修正しました。
+を利用して認証ユーザーを明示し、正常系・存在しないタスク・他ユーザーのタスクへのアクセスを
+分けてテストするよう修正しました。
+
+### Test database isolation
+
+pytestが開発DBを参照していたため、drop_all() により開発DBのテーブルが削除されました。
+開発用の app → db とテスト用の app-test → db-test を分離し、
+pytestによるテーブル作成・削除が開発DBへ影響しない構成に変更することで解決しました。
+
+### ECS / ALB Availability Zone mismatch
+
+ECS Taskがap-northeast-1dに配置された一方、ALBではap-northeast-1a / 1cのみが有効だったため、
+ECS Serviceの配置先をALBと同じAZに統一して解決しました。
 
 ------------------------------------------------------------------------
 
@@ -298,7 +316,6 @@ Override
 -   CloudFront / ALB 周辺のさらなるセキュリティ強化
 -   ログ・監視・アラートの強化
 -   テストカバレッジの可視化
--   GitHub Actions の CI Job / Deploy Job の分離
 -   フロントエンドのコンポーネント化・UI 改善
 
 ------------------------------------------------------------------------
