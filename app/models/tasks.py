@@ -23,7 +23,7 @@ class Task(Base):
         UUID, primary_key=True, default=uuid.uuid4
     )
     user_id: Mapped[uuid.UUID] = mapped_column(
-            UUID, ForeignKey("users.user_id"), nullable=False
+            UUID, ForeignKey("users.user_id"), nullable=False, index=True
     )
     user: Mapped["User"] = relationship("User", back_populates="tasks")
     task_name: Mapped[str] = mapped_column(
