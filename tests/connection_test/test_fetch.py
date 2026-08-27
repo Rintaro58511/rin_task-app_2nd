@@ -3,7 +3,7 @@ from httpx import ASGITransport, AsyncClient
 
 from main import app
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_search_other_user_subtask(
     connection_test,
     override_get_test_db,

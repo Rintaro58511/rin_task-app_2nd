@@ -10,7 +10,7 @@ from routers import subtasks
 from enums import TaskStatus
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_create_subtask(monkeypatch, task, subtask_schema, override_get_db, override_get_current_user):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -43,7 +43,7 @@ async def test_create_subtask(monkeypatch, task, subtask_schema, override_get_db
     body = response.json()
     assert body["message"] == "サブタスクを登録しました"
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_fail_create_subtask(monkeypatch, task, subtask_schema, override_get_db, override_get_current_user):
 
     async def mock_fetch_task(task_id, user_id, db):

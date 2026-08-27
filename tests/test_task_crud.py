@@ -19,7 +19,7 @@ from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
 from enums import TaskStatus
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_fetch_task(test_task):
     mock_db = AsyncMock()
 
@@ -39,7 +39,7 @@ async def test_fetch_task(test_task):
     mock_db.execute.assert_called_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_fetch_tasks():
     mock_db = AsyncMock()
 
@@ -89,7 +89,7 @@ async def test_fetch_tasks():
     assert retrieved_tasks[1].changed_time == datetime(2026, 7, 30, 11, 11, 12)
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_add_task():
     mock_db = AsyncMock()
     mock_db.add = MagicMock()
@@ -117,7 +117,7 @@ async def test_add_task():
     mock_db.refresh.assert_awaited_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_remove_task(monkeypatch, test_task):
     mock_db = AsyncMock()
 
@@ -132,7 +132,7 @@ async def test_remove_task(monkeypatch, test_task):
     mock_db.commit.assert_called_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_modify_task(test_task):
     mock_db = AsyncMock()
 
@@ -168,7 +168,7 @@ async def test_modify_task(test_task):
     mock_db.refresh.assert_called_once()
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_arrange_tasks():
 
     mock_db = AsyncMock()
@@ -241,7 +241,7 @@ async def test_arrange_tasks():
     assert mock_scalars.all.call_count == 2
 
 
-@pytest.mark.anyio
+@pytest.mark.asyncio
 async def test_filter_tasks():
     mock_db = AsyncMock()
 
