@@ -11,4 +11,10 @@ class Settings(BaseSettings):
     database_port: int
     database_name: str
 
+    database_user_test: str
+    database_password_test: str
+    database_host_test: str
+    database_port_test: int
+    database_name_test: str
+
 settings = Settings()
