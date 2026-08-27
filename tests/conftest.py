@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 import os
 from sqlalchemy import URL
 from config import settings
+import pytest_asyncio
 
 TEST_ASYNC_DB_URL = URL.create(
     drivername="postgresql+asyncpg",
@@ -25,33 +26,51 @@ TEST_ASYNC_DB_URL = URL.create(
     database=settings.database_name,
 )
 
-test_async_engine = create_async_engine(TEST_ASYNC_DB_URL, echo=True)
+@pytest_asyncio.fixture
+async def override_get_test_db(test_engine):
+    session_factory = async_sessionmaker(
+        test_engine,
+        expire_on_commit=False,
+    )
 
-test_async_session = async_sessionmaker(test_async_engine, expire_on_commit=False)
+    async def override_db():
+        async with session_factory() as session:
+            yield session
 
-async def get_test_db_session():
-    async with test_async_session() as session:
+    app.dependency_overrides[db.get_db_session] = override_db
+
+    yield
+
+    app.dependency_overrides.clear()
+
+@pytest_asyncio.fixture
+async def test_engine():
+    engine = create_async_engine(TEST_ASYNC_DB_URL)
+
+    yield engine
+
+    await engine.dispose()
+
+@pytest_asyncio.fixture
+async def db_session(test_engine):
+    session_factory = async_sessionmaker(
+        test_engine,
+        expire_on_commit=False,
+    )
+
+    async with session_factory() as session:
         yield session
 
-@pytest.fixture
-async def init_test_db():
-    async with test_async_engine.begin() as conn:
+@pytest_asyncio.fixture
+async def init_test_db(test_engine):
+    async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
     yield
 
-    async with test_async_engine.begin() as conn:
+    async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
-
-@pytest.fixture
-def override_get_test_db():
-
-    app.dependency_overrides[db.get_db_session] = get_test_db_session
-
-    yield
-
-    app.dependency_overrides.clear()
 
 @pytest.fixture
 def test_user():
@@ -113,18 +132,23 @@ def override_get_test_current_user(test_other_user):
 
     app.dependency_overrides.clear()
 
-@pytest.fixture
-async def connection_test(init_test_db, test_user, test_other_user, test_task, test_subtask):
-    async with test_async_session() as session:
-        session.add(test_user)
-        session.add(test_other_user)
-        session.add(test_task)
-        session.add(test_subtask)
+@pytest_asyncio.fixture
+async def connection_test(
+    init_test_db,
+    db_session,
+    test_user,
+    test_other_user,
+    test_task,
+    test_subtask,
+):
+    db_session.add(test_user)
+    db_session.add(test_other_user)
+    db_session.add(test_task)
+    db_session.add(test_subtask)
 
-        await session.commit()
+    await db_session.commit()
 
-        yield test_user, test_other_user, test_task, test_subtask
-
+    yield test_user, test_other_user, test_task, test_subtask
 
 
 @pytest.fixture
@@ -198,7 +222,6 @@ def other_task():
         progress_comment = "少し進んだ"
     )
     return expeted_task
-
 
 @pytest.fixture
 def override_get_db():

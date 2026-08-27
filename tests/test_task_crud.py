@@ -20,36 +20,20 @@ from enums import TaskStatus
 
 
 @pytest.mark.anyio
-async def test_fetch_task():
+async def test_fetch_task(test_task):
     mock_db = AsyncMock()
-
-    task_id = uuid.uuid4()
-    user_id = uuid.uuid4()
-    expected_task = Task(
-        task_id=task_id,
-        task_name="test_task",
-        task_deadline=date(2026, 8, 1),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 11),
-        user=None,
-        user_id=user_id,
-        task_progress=TaskStatus.IN_PROGRESS,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
 
     mock_result = MagicMock()
     mock_db.execute.return_value = mock_result
 
     mock_scalars = MagicMock()
     mock_result.scalars.return_value = mock_scalars
-    mock_scalars.first.return_value = expected_task
+    mock_scalars.first.return_value = test_task
 
-    retrieved_task = await fetch_task(task_id, user_id, mock_db)
+    retrieved_task = await fetch_task(test_task.task_id, test_task.user_id, mock_db)
 
     assert retrieved_task.task_name == "test_task"
-    assert retrieved_task.task_deadline == date(2026, 8, 1)
-    assert retrieved_task.task_detail == "コードのリファクタリング"
+    assert retrieved_task.task_deadline == date(2026, 9, 20)
     assert retrieved_task.task_progress == TaskStatus.IN_PROGRESS
 
     mock_db.execute.assert_called_once()
@@ -134,59 +118,29 @@ async def test_add_task():
 
 
 @pytest.mark.anyio
-async def test_remove_task(monkeypatch):
+async def test_remove_task(monkeypatch, test_task):
     mock_db = AsyncMock()
 
-    task_id = uuid.uuid4()
-    user_id = uuid.uuid4()
-    expected_task = Task(
-        task_id=task_id,
-        task_name="test_task",
-        task_deadline=date(2026, 8, 1),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 11),
-        user=None,
-        user_id=user_id,
-        task_progress=TaskStatus.IN_PROGRESS,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
-
-    async def mock_fetch_task(mock_task_id, mock_db):
-        return expected_task
+    async def mock_fetch_task(task_id, mock_db):
+        return test_task
 
     monkeypatch.setattr(tasks, "fetch_task", mock_fetch_task)
 
-    await remove_task(task_id, mock_db)
+    await remove_task(test_task.task_id, mock_db)
 
     mock_db.delete.assert_called_once()
     mock_db.commit.assert_called_once()
 
 
 @pytest.mark.anyio
-async def test_modify_task():
+async def test_modify_task(test_task):
     mock_db = AsyncMock()
 
-    task_id = uuid.uuid4()
-    user_id = uuid.uuid4()
-    target_task = Task(
-        task_id=task_id,
-        task_name="test_task",
-        task_deadline=date(2026, 8, 1),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 11),
-        user=None,
-        user_id=user_id,
-        task_progress=TaskStatus.IN_PROGRESS,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
-
-    assert target_task.task_name == "test_task"
-    assert target_task.task_deadline == date(2026, 8, 1)
-    assert target_task.task_progress == TaskStatus.IN_PROGRESS
-    assert target_task.progress_ratio == 90
-    assert target_task.progress_comment == "終わりそう"
+    assert test_task.task_name == "test_task"
+    assert test_task.task_deadline == date(2026, 9, 20)
+    assert test_task.task_progress == TaskStatus.IN_PROGRESS
+    assert test_task.progress_ratio == 80
+    assert test_task.progress_comment == "少し進んだ"
 
     status_data = TaskStatusSchema(
         task_progress=TaskStatus.DONE,
@@ -196,16 +150,16 @@ async def test_modify_task():
 
     expected_task = UpdateAndCreateTaskSchema(
         task_name="test_task2",
-        task_deadline=date(2026, 8, 2),
+        task_deadline=date(2026, 12, 2),
         task_detail="コードのリファクタリング",
         changed_time=datetime(2026, 7, 30, 11, 11, 12),
         task_status=status_data,
     )
 
-    returned_task = await modify_task(expected_task, target_task, mock_db)
+    returned_task = await modify_task(expected_task, test_task, mock_db)
 
     assert returned_task.task_name == "test_task2"
-    assert returned_task.task_deadline == date(2026, 8, 2)
+    assert returned_task.task_deadline == date(2026, 12, 2)
     assert returned_task.task_progress == TaskStatus.DONE
     assert returned_task.progress_ratio == 100
     assert returned_task.progress_comment == "終わった"

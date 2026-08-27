@@ -262,6 +262,60 @@ Docker の multi-stage build
 デプロイ前に Pytest と Alembic migration の upgrade → downgrade → upgrade を実行し、
 アプリケーションテストとDBスキーマ変更の検証に成功した変更だけを本番へ反映します。
 
+## 6.INDEXの導入
+
+DBのTaskテーブルにINDEXを導入しました。user_id, deadline, task_progressに対してそれぞれIndexを
+貼りましたが、本アプリの現在のクエリパターンではdeadline/progressの単独インデックスは利用されなかったことが
+テストの結果判明したのでuser_idのみにつけています。
+
+user_id(Indexあり)
+```
+tests/performance/test_task_fetch.py Bitmap Heap Scan on tasks  (cost=6.44..718.50 rows=277 width=194) (actual time=0.457..0.466 rows=100 loops=1)
+  Recheck Cond: (user_id = '7dcd1e74-fcaf-42aa-b52e-888d43f44851'::uuid)
+  Heap Blocks: exact=3
+  ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.448..0.449 rows=100 loops=1)
+        Index Cond: (user_id = '7dcd1e74-fcaf-42aa-b52e-888d43f44851'::uuid)
+Planning Time: 0.080 ms
+Execution Time: 0.495 ms
+```
+
+user_id(Indexなし)
+```
+tests/performance/test_task_fetch.py Seq Scan on tasks  (cost=0.00..2231.55 rows=277 width=194) (actual time=3.534..4.741 rows=100 loops=1)
+  Filter: (user_id = '774d80eb-a0c3-4046-89a8-f80beae00496'::uuid)
+  Rows Removed by Filter: 99900
+Planning Time: 0.076 ms
+Execution Time: 4.755 ms
+```
+
+task_progress(Indexあり)
+```
+tests/performance/test_task_arrange_p.py Sort  (cost=731.82..732.51 rows=277 width=198) (actual time=0.067..0.071 rows=100 loops=1)
+  Sort Key: (CASE task_progress WHEN 'TODO'::taskstatus THEN 1 WHEN 'IN_PROGRESS'::taskstatus THEN 2 WHEN 'DONE'::taskstatus THEN 3 ELSE NULL::integer END)
+  Sort Method: quicksort  Memory: 37kB
+  ->  Bitmap Heap Scan on tasks  (cost=6.44..720.58 rows=277 width=198) (actual time=0.028..0.041 rows=100 loops=1)
+        Recheck Cond: (user_id = '0158fc89-29d4-41d6-8399-4d36b62932ba'::uuid)
+        Heap Blocks: exact=3
+        ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.017..0.017 rows=100 loops=1)
+              Index Cond: (user_id = '0158fc89-29d4-41d6-8399-4d36b62932ba'::uuid)
+Planning Time: 0.146 ms
+Execution Time: 0.101 ms
+```
+
+deadline(Indexあり)
+```
+tests/performance/test_task_arrange_d.py Sort  (cost=729.74..730.43 rows=277 width=194) (actual time=0.045..0.048 rows=100 loops=1)
+  Sort Key: task_deadline
+  Sort Method: quicksort  Memory: 36kB
+  ->  Bitmap Heap Scan on tasks  (cost=6.44..718.50 rows=277 width=194) (actual time=0.023..0.032 rows=100 loops=1)
+        Recheck Cond: (user_id = '0b318d36-8159-4046-8256-eac7783ba193'::uuid)
+        Heap Blocks: exact=3
+        ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.017..0.017 rows=100 loops=1)
+              Index Cond: (user_id = '0b318d36-8159-4046-8256-eac7783ba193'::uuid)
+Planning Time: 0.107 ms
+Execution Time: 0.076 ms
+```
+
 ------------------------------------------------------------------------
 
 ## Problems Solved During Development
