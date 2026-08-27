@@ -19,11 +19,11 @@ import pytest_asyncio
 
 TEST_ASYNC_DB_URL = URL.create(
     drivername="postgresql+asyncpg",
-    username=settings.database_user,
-    password=settings.database_password,
-    host=settings.database_host,
-    port=settings.database_port,
-    database=settings.database_name,
+    username=settings.database_user_test,
+    password=settings.database_password_test,
+    host=settings.database_host_test,
+    port=settings.database_port_test,
+    database=settings.database_name_test,
 )
 
 @pytest_asyncio.fixture
