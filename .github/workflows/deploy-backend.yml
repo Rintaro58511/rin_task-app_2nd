@@ -53,6 +53,8 @@ jobs:
       DATABASE_PORT_TEST: 5432
       DATABASE_NAME_TEST: test_db
 
+      SECRET_KEY: test-secret-key
+
     services:
       postgres:
         image: postgres:16-alpine
