@@ -51,9 +51,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          POSTGRES_DB: test_db
+          POSTGRES_USER_TEST: test_user
+          POSTGRES_PASSWORD_TEST: test_password
+          POSTGRES_DB_TEST: test_db
         ports:
           - 5432:5432
         options: >-
