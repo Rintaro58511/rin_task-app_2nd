@@ -16,14 +16,17 @@ import os
 from sqlalchemy import URL
 from config import settings
 import pytest_asyncio
+from config import TestSettings
+
+test_settings = TestSettings()
 
 TEST_ASYNC_DB_URL = URL.create(
     drivername="postgresql+asyncpg",
-    username=settings.database_user_test,
-    password=settings.database_password_test,
-    host=settings.database_host_test,
-    port=settings.database_port_test,
-    database=settings.database_name_test,
+    username=test_settings.database_user_test,
+    password=test_settings.database_password_test,
+    host=test_settings.database_host_test,
+    port=test_settings.database_port_test,
+    database=test_settings.database_name_test,
 )
 
 @pytest_asyncio.fixture

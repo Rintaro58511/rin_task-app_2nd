@@ -11,6 +11,11 @@ class Settings(BaseSettings):
     database_port: int
     database_name: str
 
+class TestSettings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+    )
     database_user_test: str
     database_password_test: str
     database_host_test: str
