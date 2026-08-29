@@ -1,14 +1,6 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status,
-)
-from sqlalchemy.ext.asyncio import AsyncSession
-
 import db
 from cruds.subtasks import (
     add_subtask,
@@ -18,18 +10,28 @@ from cruds.subtasks import (
     remove_subtask,
 )
 from cruds.tasks import fetch_task
-from routers.user import get_current_user
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 from schemas.subtasks import ResponseSchema, SubTaskSchema, UpdateAndCreateSubTaskSchema
 from service.subtasks import (
     calculate_ratio,
     check_progress,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from routers.user import get_current_user
 
 router = APIRouter()
 
 
 @router.post(
-    "/tasks/{task_id}/subtask", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
+    "/tasks/{task_id}/subtask",
+    response_model=ResponseSchema,
+    status_code=status.HTTP_201_CREATED,
 )
 async def create_subtask(
     subtask: UpdateAndCreateSubTaskSchema,
@@ -69,7 +71,8 @@ async def search_subtask(
     subtask = await fetch_subtask(subtask_id, current_user.user_id, db_session)
     if subtask is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたサブタスクが見つかりません"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたサブタスクが見つかりません",
         )
 
     return subtask
@@ -138,13 +141,15 @@ async def delete_subtask(
     task = await fetch_task(task_id, current_user.user_id, db_session)
     if task is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたタスクが存在しません",
         )
 
     target_subtask = await fetch_subtask(subtask_id, current_user.user_id, db_session)
     if target_subtask is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたサブタスクが存在しません"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたサブタスクが存在しません",
         )
     if task_id != target_subtask.task_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="親タスクが異なります")

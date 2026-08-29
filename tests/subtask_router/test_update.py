@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException, status
-
 from enums import TaskStatus
+from fastapi import HTTPException, status
 from routers import subtasks
 from routers.subtasks import update_subtask
 
@@ -116,7 +115,11 @@ async def test_update_other_task(subtask_schema, task, subtask, other_task, monk
 
     with pytest.raises(HTTPException) as exc_info:
         await update_subtask(
-            subtask_schema, subtask.subtask_id, other_task.task_id, current_user, mock_db
+            subtask_schema,
+            subtask.subtask_id,
+            other_task.task_id,
+            current_user,
+            mock_db,
         )
 
     assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST

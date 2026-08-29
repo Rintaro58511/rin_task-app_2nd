@@ -2,7 +2,6 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from cruds.subtasks import add_subtask
 
 

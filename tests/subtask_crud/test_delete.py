@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock
 
 import pytest
-
 from cruds.subtasks import remove_subtask
 
 

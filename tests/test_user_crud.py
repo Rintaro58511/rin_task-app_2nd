@@ -2,7 +2,6 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-
 from cruds import user
 from cruds.user import add_user, authenticate_user, fetch_user_by_email
 from models.user import User
