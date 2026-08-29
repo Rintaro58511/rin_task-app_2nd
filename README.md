@@ -110,7 +110,7 @@ flowchart LR
 
     Push --> TestDB
     TestDB --> Ruff
-    Ruff --> Pytests
+    Ruff --> Pytest
     Pytest --> AlembicTest
     AlembicTest -->|Success| Build
     AlembicTest -->|Failure| Stop[Stop]
