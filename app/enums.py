@@ -6,6 +6,7 @@ class TaskStatus(StrEnum):
     IN_PROGRESS = "IN_PROGRESS"
     DONE = "DONE"
 
+
 class SubTaskPriority(StrEnum):
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"

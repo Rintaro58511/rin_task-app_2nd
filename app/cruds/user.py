@@ -1,9 +1,9 @@
-from schemas.user import UserInDB
-from models.user import User
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from pwdlib import PasswordHash
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.user import User
+from schemas.user import UserInDB
 
 password_hash = PasswordHash.recommended()
 
@@ -51,9 +51,7 @@ async def add_user(user: UserInDB, db_session: AsyncSession) -> User:
     return new_user
 
 
-async def authenticate_user(
-    email: str, password: str, db_session: AsyncSession
-) -> User:
+async def authenticate_user(email: str, password: str, db_session: AsyncSession) -> User:
     """
     ログイン情報（メールアドレス・パスワード）の検証を行う
 

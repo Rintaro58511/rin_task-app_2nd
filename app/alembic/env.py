@@ -1,17 +1,11 @@
+import asyncio
 from logging.config import fileConfig
 
-from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import pool
-
-from models.tasks import Task
-from models.user import User
-from models.subtasks import SubTask
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from alembic import context
-
-from db import Base, ASYNC_DB_URL
-
-import asyncio
+from db import ASYNC_DB_URL, Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -72,10 +66,9 @@ async def run_migrations_online() -> None:
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
 
+
 def do_run_migrations(connection):
-    context.configure(
-        connection=connection, target_metadata=target_metadata
-    )
+    context.configure(connection=connection, target_metadata=target_metadata)
 
     with context.begin_transaction():
         context.run_migrations()

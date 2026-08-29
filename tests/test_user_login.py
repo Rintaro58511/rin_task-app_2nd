@@ -1,12 +1,14 @@
-import routers.user as user
+import uuid
+from unittest.mock import AsyncMock
+
+import pytest
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
+import db
+import routers.user as user
 from main import app
 from models.user import User
-from unittest.mock import AsyncMock
-import db
-import pytest
-import uuid
-from fastapi import status
 
 
 @pytest.fixture
@@ -30,9 +32,7 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
 
     monkeypatch.setattr(user, "authenticate_user", mock_authenticate_user)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/user/token",
             data={
@@ -40,7 +40,7 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
                 "password": "dummy_password",
             },
         )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
 
     assert "access_token" in body
@@ -55,9 +55,7 @@ async def test_login_failure(monkeypatch, override_get_db):
 
     monkeypatch.setattr(user, "authenticate_user", mock_authenticate_user_fail)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/user/token",
             data={

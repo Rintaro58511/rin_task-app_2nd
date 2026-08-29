@@ -1,11 +1,10 @@
-from unittest.mock import AsyncMock, MagicMock
-
 import uuid
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from cruds import user
-from cruds.user import fetch_user_by_email, add_user, authenticate_user
+from cruds.user import add_user, authenticate_user, fetch_user_by_email
 from models.user import User
 from schemas.user import UserInDB
 
@@ -13,9 +12,7 @@ from schemas.user import UserInDB
 @pytest.mark.anyio
 async def test_fetch_user_by_email():
     mock_db = AsyncMock()
-    expected_user = User(
-        user_id=uuid.uuid4(), user_name="rintaro", email="test@test.com"
-    )
+    expected_user = User(user_id=uuid.uuid4(), user_name="rintaro", email="test@test.com")
 
     mock_result = MagicMock()
     mock_db.execute.return_value = mock_result

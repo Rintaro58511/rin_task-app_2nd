@@ -1,9 +1,11 @@
-from schemas.tasks import UpdateAndCreateTaskSchema
-from models.tasks import Task
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, case
-from uuid import UUID
 from datetime import datetime, timezone
+from uuid import UUID
+
+from sqlalchemy import case, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.tasks import Task
+from schemas.tasks import UpdateAndCreateTaskSchema
 
 
 async def fetch_task(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> Task:
@@ -18,7 +20,9 @@ async def fetch_task(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> 
         Task: 探したいタスクの情報
 
     """
-    result = await db_session.execute(select(Task).filter(Task.task_id == task_id, Task.user_id == user_id))
+    result = await db_session.execute(
+        select(Task).filter(Task.task_id == task_id, Task.user_id == user_id)
+    )
     target_task = result.scalars().first()
 
     return target_task
@@ -116,9 +120,7 @@ async def modify_task(
     return target_task
 
 
-async def arrange_tasks(
-    sort_order: str, user_id: UUID, db_session: AsyncSession
-) -> list[Task]:
+async def arrange_tasks(sort_order: str, user_id: UUID, db_session: AsyncSession) -> list[Task]:
     """
     sort_orderに応じてタスクを並び替える
 
@@ -148,9 +150,7 @@ async def arrange_tasks(
     return list(result.scalars().all())
 
 
-async def filter_tasks(
-    search_name: str, user_id: UUID, db_session: AsyncSession
-) -> list[Task]:
+async def filter_tasks(search_name: str, user_id: UUID, db_session: AsyncSession) -> list[Task]:
     """
     タスクの検索結果に応じてタスクを絞り込む
 
@@ -163,9 +163,7 @@ async def filter_tasks(
         list[Task]: 検索ワードで絞ったタスクのリスト
 
     """
-    stmt = select(Task).where(
-        Task.user_id == user_id, Task.task_name.like(f"%{search_name}%")
-    )
+    stmt = select(Task).where(Task.user_id == user_id, Task.task_name.like(f"%{search_name}%"))
 
     result = await db_session.execute(stmt)
 

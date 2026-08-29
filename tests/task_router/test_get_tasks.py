@@ -1,12 +1,14 @@
-import pytest
-import routers.user as user
-import routers.tasks as task
-from httpx import ASGITransport, AsyncClient
-from main import app
 import uuid
-from datetime import datetime, date
-from models.tasks import Task
+from datetime import date, datetime
+
+import pytest
+from fastapi import status
+from httpx import ASGITransport, AsyncClient
+
+import routers.tasks as task
 from enums import TaskStatus
+from main import app
+from models.tasks import Task
 
 
 @pytest.mark.anyio
@@ -55,11 +57,9 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
 
     monkeypatch.setattr(task, "fetch_tasks", mock_fetch_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task"
     assert body[1]["task_name"] == "test_task2"
@@ -70,9 +70,7 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
 
 
 @pytest.mark.anyio
-async def test_get_sorted_deadline_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_sorted_deadline_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -117,11 +115,9 @@ async def test_get_sorted_deadline_tasks(
 
     monkeypatch.setattr(task, "arrange_tasks", mock_arrange_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"sort": "deadline"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task2"
     assert body[1]["task_name"] == "test_task3"
@@ -132,9 +128,7 @@ async def test_get_sorted_deadline_tasks(
 
 
 @pytest.mark.anyio
-async def test_get_sorted_status_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_sorted_status_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -179,11 +173,9 @@ async def test_get_sorted_status_tasks(
 
     monkeypatch.setattr(task, "arrange_tasks", mock_arrange_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"sort": "status"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task"
     assert body[1]["task_name"] == "test_task2"
@@ -194,9 +186,7 @@ async def test_get_sorted_status_tasks(
 
 
 @pytest.mark.anyio
-async def test_get_filtered_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_filtered_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_filter_tasks(search_name, user_id, db):
         mock_tasks = [
             Task(
@@ -241,11 +231,9 @@ async def test_get_filtered_tasks(
 
     monkeypatch.setattr(task, "filter_tasks", mock_filter_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"search_name": "python"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert len(body) == 2
     assert body[0]["task_name"] == "python"

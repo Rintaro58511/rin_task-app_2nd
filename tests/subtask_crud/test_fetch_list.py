@@ -1,10 +1,11 @@
-from unittest.mock import AsyncMock, MagicMock
-import pytest
 import uuid
-
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from cruds.subtasks import fetch_subtasks
+
 
 @pytest.mark.anyio
 async def test_fetch_subtasks(subtask_list):
@@ -25,10 +26,10 @@ async def test_fetch_subtasks(subtask_list):
 
     assert retrieved_subtasks[0].subtask_id == subtask_list[0].subtask_id
     assert retrieved_subtasks[0].subtask_name == "test_subtask1"
-    assert retrieved_subtasks[0].is_complete == True
+    assert retrieved_subtasks[0].is_complete is True
     assert retrieved_subtasks[0].created_at == datetime(2026, 8, 15)
 
     assert retrieved_subtasks[1].subtask_id == subtask_list[1].subtask_id
     assert retrieved_subtasks[1].subtask_name == "test_subtask2"
-    assert retrieved_subtasks[1].is_complete == False
+    assert retrieved_subtasks[1].is_complete is False
     assert retrieved_subtasks[1].created_at == datetime(2026, 8, 16)

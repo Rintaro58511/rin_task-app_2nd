@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
 import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, Field
 
 
 class UpdateAndCreateSubTaskSchema(BaseModel):
@@ -11,6 +12,7 @@ class UpdateAndCreateSubTaskSchema(BaseModel):
 class SubTaskSchema(UpdateAndCreateSubTaskSchema):
     subtask_id: uuid.UUID = Field(...)
     created_at: datetime = Field(...)
+
 
 class ResponseSchema(BaseModel):
     message: str = Field(..., description="操作に対するメッセージが入ります")

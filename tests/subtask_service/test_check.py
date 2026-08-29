@@ -1,10 +1,10 @@
 from unittest.mock import AsyncMock
-import pytest
-import uuid
-from enums import TaskStatus
 
+import pytest
+
+from enums import TaskStatus
 from service.subtasks import check_progress
-from service import subtasks
+
 
 @pytest.mark.anyio
 async def test_check_progress():

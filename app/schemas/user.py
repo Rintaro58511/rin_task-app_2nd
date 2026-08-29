@@ -1,25 +1,32 @@
 import uuid
 from typing import Annotated
+
 from pydantic import (
-    BaseModel, Field, EmailStr, Secret,
-    SerializationInfo, PlainSerializer,
+    BaseModel,
+    EmailStr,
+    Field,
+    PlainSerializer,
+    Secret,
+    SerializationInfo,
 )
+
 
 class SecretEmail(Secret[EmailStr]):
     def _display(self) -> str:
         return "***@***"
 
-def dump_secret_email(
-        v: SecretEmail, info: SerializationInfo
-) -> str:
+
+def dump_secret_email(v: SecretEmail, info: SerializationInfo) -> str:
     if info.mode == "json":
         return str(v.get_secret_value())
     return str(v)
+
 
 SecretEmailField = Annotated[
     SecretEmail,
     PlainSerializer(dump_secret_email),
 ]
+
 
 class UserSchema(BaseModel):
     user_id: uuid.UUID = Field(default_factory=uuid.uuid4)

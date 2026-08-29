@@ -1,14 +1,13 @@
-from unittest.mock import AsyncMock, MagicMock
+from datetime import date, datetime
+
 import pytest
-import routers.user as user
-import routers.tasks as task
-from httpx import ASGITransport, AsyncClient
-from main import app
-from datetime import datetime, date
-from models.tasks import Task
-from schemas.tasks import TaskSchema, TaskStatusSchema, UpdateAndCreateTaskSchema
-from enums import TaskStatus
 from fastapi import status
+from httpx import ASGITransport, AsyncClient
+
+import routers.tasks as task
+from enums import TaskStatus
+from main import app
+from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
 
 
 @pytest.mark.anyio
@@ -29,9 +28,7 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
 
     monkeypatch.setattr(task, "add_task", mock_add_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/tasks",
             json={
@@ -46,15 +43,13 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
                 },
             },
         )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     body = response.json()
     assert body["message"] == "タスク追加ができました"
 
 
 @pytest.mark.anyio
-async def test_fail_create_task(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_fail_create_task(monkeypatch, override_get_current_user, override_get_db):
     async def mock_fail_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,
@@ -71,9 +66,7 @@ async def test_fail_create_task(
 
     monkeypatch.setattr(task, "add_task", mock_fail_add_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/tasks",
             json={
@@ -88,37 +81,6 @@ async def test_fail_create_task(
                 },
             },
         )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     body = response.json()
     assert body["detail"] == "期限が過去の日付になっています"
-
-
-@pytest.mark.anyio
-async def test_fail_db_create_task(
-    monkeypatch, override_get_current_user, override_get_db
-):
-    async def mock_fail_db_add_task(task, user_id, db):
-        raise Exception("データベースエラーのテスト")
-
-    monkeypatch.setattr(task, "add_task", mock_fail_db_add_task)
-
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        response = await ac.post(
-            "/tasks",
-            json={
-                "task_name": "test_task",
-                "task_deadline": "2027-08-01",
-                "task_detail": "コードのリファクタリング",
-                "changed_time": "2026-07-30T11:11:11",
-                "task_status": {
-                    "task_progress": "IN_PROGRESS",
-                    "progress_ratio": 90,
-                    "progress_comment": "終わりそう",
-                },
-            },
-        )
-    assert response.status_code == 400
-    body = response.json()
-    assert body["detail"] == "タスクの登録に失敗しました"

@@ -1,22 +1,22 @@
-from unittest.mock import AsyncMock, MagicMock
-import pytest
-
 import uuid
-from datetime import datetime, date
+from datetime import date, datetime
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 from cruds import tasks
 from cruds.tasks import (
+    add_task,
+    arrange_tasks,
     fetch_task,
     fetch_tasks,
-    add_task,
-    remove_task,
-    modify_task,
-    arrange_tasks,
     filter_tasks,
+    modify_task,
+    remove_task,
 )
+from enums import TaskStatus
 from models.tasks import Task
 from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
-from enums import TaskStatus
 
 
 @pytest.mark.asyncio
@@ -268,18 +268,6 @@ async def test_filter_tasks():
         user=None,
         user_id=user_id,
         task_progress=TaskStatus.IN_PROGRESS,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
-    task_java = Task(
-        task_id=uuid.uuid4(),
-        task_name="java",
-        task_deadline=date(2026, 8, 2),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 12),
-        user=None,
-        user_id=user_id,
-        task_progress=TaskStatus.TODO,
         progress_ratio=90,
         progress_comment="終わりそう",
     )

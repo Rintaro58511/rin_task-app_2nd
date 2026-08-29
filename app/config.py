@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -10,6 +11,8 @@ class Settings(BaseSettings):
     database_host: str
     database_port: int
     database_name: str
+    secret_key: str
+
 
 class TestSettings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -21,5 +24,6 @@ class TestSettings(BaseSettings):
     database_host_test: str
     database_port_test: int
     database_name_test: str
+
 
 settings = Settings()
