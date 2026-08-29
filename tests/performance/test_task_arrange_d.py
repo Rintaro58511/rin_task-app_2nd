@@ -3,10 +3,11 @@ import uuid
 from datetime import date, datetime, timezone
 
 import pytest
+from sqlalchemy import text
+
 from enums import TaskStatus
 from models.tasks import Task
 from models.user import User
-from sqlalchemy import text
 
 
 @pytest.mark.asyncio

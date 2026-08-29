@@ -1,6 +1,14 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
+from sqlalchemy.ext.asyncio import AsyncSession
+
 import db
 from cruds.subtasks import (
     add_subtask,
@@ -10,20 +18,12 @@ from cruds.subtasks import (
     remove_subtask,
 )
 from cruds.tasks import fetch_task
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    status,
-)
+from routers.user import get_current_user
 from schemas.subtasks import ResponseSchema, SubTaskSchema, UpdateAndCreateSubTaskSchema
 from service.subtasks import (
     calculate_ratio,
     check_progress,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from routers.user import get_current_user
 
 router = APIRouter()
 

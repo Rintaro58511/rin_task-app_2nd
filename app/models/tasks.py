@@ -2,8 +2,6 @@ import uuid
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
-from db import Base
-from enums import TaskStatus
 from sqlalchemy import (
     UUID,
     Date,
@@ -17,6 +15,9 @@ from sqlalchemy import (
     Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from db import Base
+from enums import TaskStatus
 
 if TYPE_CHECKING:
     from models.subtasks import SubTask

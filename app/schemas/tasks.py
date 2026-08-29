@@ -1,8 +1,9 @@
 import uuid
 from datetime import date
 
-from enums import TaskStatus
 from pydantic import BaseModel, Field
+
+from enums import TaskStatus
 
 
 class TaskStatusSchema(BaseModel):

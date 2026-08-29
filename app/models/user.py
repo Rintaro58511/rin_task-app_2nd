@@ -1,9 +1,10 @@
 import uuid
 from typing import TYPE_CHECKING, List
 
-from db import Base
 from sqlalchemy import UUID, Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from db import Base
 
 if TYPE_CHECKING:
     from models.tasks import Task

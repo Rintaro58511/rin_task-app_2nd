@@ -1,8 +1,9 @@
-from models.user import User
 from pwdlib import PasswordHash
-from schemas.user import UserInDB
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.user import User
+from schemas.user import UserInDB
 
 password_hash = PasswordHash.recommended()
 

@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-import db
 import jwt
-from config import settings
-from cruds.user import add_user, authenticate_user, fetch_user_by_email
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jwt.exceptions import InvalidTokenError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import db
+from config import settings
+from cruds.user import add_user, authenticate_user, fetch_user_by_email
 from models.user import User
 from schemas.auth import Token
 from schemas.user import ResponseSchema, UserInDB, UserSchema
-from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/user")
 

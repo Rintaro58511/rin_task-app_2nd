@@ -1,11 +1,12 @@
 import uuid
 from unittest.mock import AsyncMock
 
-import db
 import pytest
-import routers.user as user
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
+import db
+import routers.user as user
 from main import app
 from models.user import User
 from routers.user import create_access_token
