@@ -170,8 +170,5 @@ async def delete_task(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが見つかりません"
         )
-    if deleted_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
-    await remove_task(task_id, db_session)
 
     return ResponseSchema(message="タスクを削除しました")
