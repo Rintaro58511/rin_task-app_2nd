@@ -22,18 +22,18 @@ async def fetch_subtask(
         SubTask: 探したいタスクの情報
 
     """
-    result = await db_session.execute(select(SubTask)
-                                      .where(SubTask.subtask_id == subtask_id)
-                                      .join(Task)
-                                      .where(Task.user_id == user_id))
+    result = await db_session.execute(
+        select(SubTask)
+        .where(SubTask.subtask_id == subtask_id)
+        .join(Task)
+        .where(Task.user_id == user_id)
+    )
     target_subtask = result.scalars().first()
 
     return target_subtask
 
 
-async def fetch_subtasks(
-    task_id: UUID, user_id: UUID, db_session: AsyncSession
-) -> list[SubTask]:
+async def fetch_subtasks(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> list[SubTask]:
     """
     タスクが持っている全てのサブタスク情報をデータベースから探す
 
@@ -51,10 +51,7 @@ async def fetch_subtasks(
         .where(SubTask.task_id == task_id)
         .join(Task)
         .where(Task.user_id == user_id)
-        .order_by(
-        SubTask.created_at.asc(),
-        SubTask.subtask_id.asc()
-        )
+        .order_by(SubTask.created_at.asc(), SubTask.subtask_id.asc())
     )
     target_subtasks = results.scalars().all()
 
@@ -82,9 +79,7 @@ async def add_subtask(
     db_session.add(new_subtask)
 
 
-async def remove_subtask(
-    target_subtask: SubTask, db_session: AsyncSession
-) -> SubTask:
+async def remove_subtask(target_subtask: SubTask, db_session: AsyncSession) -> SubTask:
     """
     引数のサブタスクを削除する
 
@@ -101,9 +96,7 @@ async def remove_subtask(
     return target_subtask
 
 
-async def modify_subtask(
-    subtask: UpdateAndCreateSubTaskSchema, target_subtask: SubTask
-) -> SubTask:
+async def modify_subtask(subtask: UpdateAndCreateSubTaskSchema, target_subtask: SubTask) -> SubTask:
     """
     データベースのサブタスク情報を更新する
 

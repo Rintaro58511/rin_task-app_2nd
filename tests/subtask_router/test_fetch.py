@@ -18,6 +18,7 @@ async def test_search_subtask(subtask, monkeypatch):
 
     async def mock_fetch_subtask(subtask_id, user_id, db_session):
         return subtask
+
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
     response = await search_subtask(subtask_id, current_user, mock_db)
@@ -25,6 +26,7 @@ async def test_search_subtask(subtask, monkeypatch):
     assert response.subtask_name == "test_subtask"
     assert response.is_complete is False
     assert response.created_at == datetime(2026, 8, 15)
+
 
 @pytest.mark.anyio
 async def test_search_none_subtask(subtask, monkeypatch):
@@ -34,6 +36,7 @@ async def test_search_none_subtask(subtask, monkeypatch):
 
     async def mock_fetch_subtask(subtask_id, user_id, mock_db):
         return None
+
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
     with pytest.raises(HTTPException) as exc_info:

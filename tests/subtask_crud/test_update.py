@@ -11,7 +11,7 @@ async def test_modify_subtask(subtask_schema, subtask):
     assert subtask.subtask_name == "test_subtask"
     assert subtask.is_complete is False
     assert subtask.created_at == datetime(2026, 8, 15)
-    
+
     await modify_subtask(subtask_schema, subtask)
 
     assert subtask.subtask_name == "test_subtask2"

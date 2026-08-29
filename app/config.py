@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     database_name: str
     secret_key: str
 
+
 class TestSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -23,5 +24,6 @@ class TestSettings(BaseSettings):
     database_host_test: str
     database_port_test: int
     database_name_test: str
+
 
 settings = Settings()

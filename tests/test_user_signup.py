@@ -31,9 +31,7 @@ async def test_signup_user(monkeypatch, override_get_db):
 
     monkeypatch.setattr(user, "add_user", mock_add_user)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/user/signup",
             json={

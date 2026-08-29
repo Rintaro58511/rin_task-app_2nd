@@ -13,5 +13,6 @@ class SubTaskSchema(UpdateAndCreateSubTaskSchema):
     subtask_id: uuid.UUID = Field(...)
     created_at: datetime = Field(...)
 
+
 class ResponseSchema(BaseModel):
     message: str = Field(..., description="操作に対するメッセージが入ります")

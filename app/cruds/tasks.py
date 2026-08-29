@@ -8,9 +8,7 @@ from models.tasks import Task
 from schemas.tasks import UpdateAndCreateTaskSchema
 
 
-async def fetch_task(
-    task_id: UUID, user_id: UUID, db_session: AsyncSession
-) -> Task:
+async def fetch_task(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> Task:
     """
     タスク情報をタスクのIDを元にデータベースから探す
 
@@ -23,16 +21,14 @@ async def fetch_task(
 
     """
     result = await db_session.execute(
-        select(Task).filter(Task.task_id == task_id,Task.user_id == user_id)
-        )
+        select(Task).filter(Task.task_id == task_id, Task.user_id == user_id)
+    )
     target_task = result.scalars().first()
 
     return target_task
 
 
-async def fetch_tasks(
-    user_id: UUID, db_session: AsyncSession
-) -> list[Task]:
+async def fetch_tasks(user_id: UUID, db_session: AsyncSession) -> list[Task]:
     """
     ユーザーが持っている全てのタスク情報をデータベースから探す
 
@@ -44,9 +40,7 @@ async def fetch_tasks(
         list[Task]: ユーザーが所有するタスクリスト
 
     """
-    results = await db_session.execute(
-        select(Task).where(Task.user_id == user_id)
-        )
+    results = await db_session.execute(select(Task).where(Task.user_id == user_id))
     target_tasks = results.scalars().all()
 
     return target_tasks
@@ -80,9 +74,7 @@ async def add_task(
     await db_session.refresh(new_task)
 
 
-async def remove_task(
-    task_id: UUID, db_session: AsyncSession
-) -> None:
+async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
     """
     引数のタスクIDと一致したタスクを削除する
 
@@ -128,9 +120,7 @@ async def modify_task(
     return target_task
 
 
-async def arrange_tasks(
-    sort_order: str, user_id: UUID, db_session: AsyncSession
-) -> list[Task]:
+async def arrange_tasks(sort_order: str, user_id: UUID, db_session: AsyncSession) -> list[Task]:
     """
     sort_orderに応じてタスクを並び替える
 
@@ -146,9 +136,7 @@ async def arrange_tasks(
     stmt = select(Task).where(Task.user_id == user_id)
 
     if sort_order == "deadline":
-        stmt = stmt.order_by(
-            Task.task_deadline.asc(), Task.task_progress.asc()
-            )
+        stmt = stmt.order_by(Task.task_deadline.asc(), Task.task_progress.asc())
     if sort_order == "status":
         status_order = case(
             (Task.task_progress == "TODO", 1),
@@ -156,17 +144,13 @@ async def arrange_tasks(
             (Task.task_progress == "DONE", 3),
             else_=4,
         )
-        stmt = stmt.order_by(
-            status_order, Task.task_deadline.asc()
-            )
+        stmt = stmt.order_by(status_order, Task.task_deadline.asc())
 
     result = await db_session.execute(stmt)
     return list(result.scalars().all())
 
 
-async def filter_tasks(
-    search_name: str, user_id: UUID, db_session: AsyncSession
-) -> list[Task]:
+async def filter_tasks(search_name: str, user_id: UUID, db_session: AsyncSession) -> list[Task]:
     """
     タスクの検索結果に応じてタスクを絞り込む
 
@@ -179,9 +163,7 @@ async def filter_tasks(
         list[Task]: 検索ワードで絞ったタスクのリスト
 
     """
-    stmt = select(Task).where(
-        Task.user_id == user_id, Task.task_name.like(f"%{search_name}%")
-    )
+    stmt = select(Task).where(Task.user_id == user_id, Task.task_name.like(f"%{search_name}%"))
 
     result = await db_session.execute(stmt)
 

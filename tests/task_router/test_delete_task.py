@@ -19,9 +19,7 @@ async def test_delete_task(monkeypatch, task, override_get_current_task_user, ov
 
     monkeypatch.setattr(tasks, "remove_task", mock_remove_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.delete(
             f"/tasks/{task.task_id}",
         )

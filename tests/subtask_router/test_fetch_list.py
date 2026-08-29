@@ -16,6 +16,7 @@ async def test_get_tasks(subtask_list, monkeypatch):
 
     async def mock_fetch_subtasks(task_id, current_user, mock_db):
         return subtask_list
+
     monkeypatch.setattr(subtasks, "fetch_subtasks", mock_fetch_subtasks)
 
     response = await get_subtasks(subtask_list[0].task_id, mock_db)

@@ -28,9 +28,7 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
 
     monkeypatch.setattr(task, "add_task", mock_add_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/tasks",
             json={
@@ -51,9 +49,7 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
 
 
 @pytest.mark.anyio
-async def test_fail_create_task(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_fail_create_task(monkeypatch, override_get_current_user, override_get_db):
     async def mock_fail_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,
@@ -70,9 +66,7 @@ async def test_fail_create_task(
 
     monkeypatch.setattr(task, "add_task", mock_fail_add_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/tasks",
             json={

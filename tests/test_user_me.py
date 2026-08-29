@@ -35,12 +35,8 @@ async def test_get_my_info_success(monkeypatch, override_get_db):
 
     token = create_access_token(data={"sub": "test@test.com"})
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        response = await ac.get(
-            "/user/me", headers={"Authorization": f"Bearer {token}"}
-        )
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.get("/user/me", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
@@ -59,12 +55,8 @@ async def test_get_my_info_failure(monkeypatch, override_get_db):
 
     token = create_access_token(data={"sub": "test@test.com"})
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
-        response = await ac.get(
-            "/user/me", headers={"Authorization": f"Bearer {token}"}
-        )
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.get("/user/me", headers={"Authorization": f"Bearer {token}"})
 
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     body = response.json()

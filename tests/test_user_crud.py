@@ -12,9 +12,7 @@ from schemas.user import UserInDB
 @pytest.mark.anyio
 async def test_fetch_user_by_email():
     mock_db = AsyncMock()
-    expected_user = User(
-        user_id=uuid.uuid4(), user_name="rintaro", email="test@test.com"
-    )
+    expected_user = User(user_id=uuid.uuid4(), user_name="rintaro", email="test@test.com")
 
     mock_result = MagicMock()
     mock_db.execute.return_value = mock_result

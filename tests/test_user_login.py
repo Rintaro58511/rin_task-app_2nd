@@ -32,9 +32,7 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
 
     monkeypatch.setattr(user, "authenticate_user", mock_authenticate_user)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/user/token",
             data={
@@ -57,9 +55,7 @@ async def test_login_failure(monkeypatch, override_get_db):
 
     monkeypatch.setattr(user, "authenticate_user", mock_authenticate_user_fail)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.post(
             "/user/token",
             data={

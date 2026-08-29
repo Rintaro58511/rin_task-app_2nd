@@ -25,9 +25,7 @@ from schemas.tasks import (
 router = APIRouter()
 
 
-@router.post(
-    "/tasks", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
-)
+@router.post("/tasks", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED)
 async def create_task(
     task: UpdateAndCreateTaskSchema,
     current_user=Depends(get_current_user),
@@ -36,9 +34,9 @@ async def create_task(
     """タスクの追加を行い、結果メッセージを返す"""
 
     if task.task_deadline < date.today():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="期限が過去の日付になっています"
-                            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="期限が過去の日付になっています"
+        )
 
     await add_task(task, current_user.user_id, db_session)
     return ResponseSchema(message="タスク追加ができました")
@@ -57,11 +55,11 @@ async def search_task(
     task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="指定されたタスクが見つかりません")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが見つかりません"
+        )
     if task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="他ユーザーのタスクです")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
 
     etag = f'"{int(task.changed_time.timestamp())}"'
 
@@ -135,14 +133,15 @@ async def update_task(
     target_task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if task.task_deadline < date.today():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="期限が過去の日付になっています")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="期限が過去の日付になっています"
+        )
     if target_task is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="指定されたタスクが存在しません")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="指定されたタスクが存在しません"
+        )
     if target_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="他ユーザーのタスクです")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
 
@@ -168,11 +167,11 @@ async def delete_task(
     deleted_task = await fetch_task(task_id, current_user.user_id, db_session)
 
     if deleted_task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="指定されたタスクが見つかりません")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが見つかりません"
+        )
     if deleted_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="他ユーザーのタスクです")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
     await remove_task(task_id, db_session)
 
     return ResponseSchema(message="タスクを削除しました")

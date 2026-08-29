@@ -25,11 +25,11 @@ async def test_task_arrange_progress_performance(init_test_db, db_session):
         user_id = uuid.uuid4()
 
         user = User(
-            user_id = user_id,
-            user_name = f"test_user-{i}",
-            email = f"example{i}@gmail.com",
-            hashed_password = f"test_pass{i}",
-            is_active = True
+            user_id=user_id,
+            user_name=f"test_user-{i}",
+            email=f"example{i}@gmail.com",
+            hashed_password=f"test_pass{i}",
+            is_active=True,
         )
         users.append(user)
         if i == TARGET_USER_COUNT:
@@ -44,15 +44,15 @@ async def test_task_arrange_progress_performance(init_test_db, db_session):
                 task_progress = TaskStatus.DONE
             tasks.append(
                 Task(
-                    task_id = uuid.uuid4(),
-                    user_id = user_id,
-                    task_name = f"test_task-{i}{j}",
-                    task_deadline = date(2026, 9, 20),
-                    task_detail = None,
-                    changed_time = datetime(2026, 8, 16, tzinfo=timezone.utc),
-                    task_progress = task_progress,
-                    progress_ratio = 80,
-                    progress_comment = "少し進んだ"
+                    task_id=uuid.uuid4(),
+                    user_id=user_id,
+                    task_name=f"test_task-{i}{j}",
+                    task_deadline=date(2026, 9, 20),
+                    task_detail=None,
+                    changed_time=datetime(2026, 8, 16, tzinfo=timezone.utc),
+                    task_progress=task_progress,
+                    progress_ratio=80,
+                    progress_comment="少し進んだ",
                 )
             )
     db_session.add_all(users)
@@ -74,9 +74,7 @@ async def test_task_arrange_progress_performance(init_test_db, db_session):
                     WHEN 'DONE' THEN 3
                 END;
         """),
-        {
-            "user_id": target_user_id
-        }
+        {"user_id": target_user_id},
     )
 
     rows = result.fetchall()

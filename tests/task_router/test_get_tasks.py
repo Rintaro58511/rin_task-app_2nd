@@ -57,9 +57,7 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
 
     monkeypatch.setattr(task, "fetch_tasks", mock_fetch_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks")
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
@@ -72,9 +70,7 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
 
 
 @pytest.mark.anyio
-async def test_get_sorted_deadline_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_sorted_deadline_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -119,9 +115,7 @@ async def test_get_sorted_deadline_tasks(
 
     monkeypatch.setattr(task, "arrange_tasks", mock_arrange_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"sort": "deadline"})
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
@@ -134,9 +128,7 @@ async def test_get_sorted_deadline_tasks(
 
 
 @pytest.mark.anyio
-async def test_get_sorted_status_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_sorted_status_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -181,9 +173,7 @@ async def test_get_sorted_status_tasks(
 
     monkeypatch.setattr(task, "arrange_tasks", mock_arrange_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"sort": "status"})
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
@@ -196,9 +186,7 @@ async def test_get_sorted_status_tasks(
 
 
 @pytest.mark.anyio
-async def test_get_filtered_tasks(
-    monkeypatch, override_get_current_user, override_get_db
-):
+async def test_get_filtered_tasks(monkeypatch, override_get_current_user, override_get_db):
     async def mock_filter_tasks(search_name, user_id, db):
         mock_tasks = [
             Task(
@@ -243,9 +231,7 @@ async def test_get_filtered_tasks(
 
     monkeypatch.setattr(task, "filter_tasks", mock_filter_tasks)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url="http://test"
-    ) as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks", params={"search_name": "python"})
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
