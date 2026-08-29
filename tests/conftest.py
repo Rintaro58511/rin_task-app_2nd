@@ -2,12 +2,9 @@ import uuid
 from datetime import date, datetime, timezone
 from unittest.mock import AsyncMock
 
+import db
 import pytest
 import pytest_asyncio
-from sqlalchemy import URL
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-
-import db
 import routers.user as user
 from config import TestSettings
 from db import Base
@@ -17,6 +14,8 @@ from models.subtasks import SubTask
 from models.tasks import Task
 from models.user import User
 from schemas.subtasks import UpdateAndCreateSubTaskSchema
+from sqlalchemy import URL
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 test_settings = TestSettings()
 

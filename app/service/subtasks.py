@@ -1,9 +1,8 @@
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from cruds.subtasks import fetch_subtasks
 from enums import TaskStatus
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def check_progress(progress_ratio: int, db_session: AsyncSession) -> TaskStatus:

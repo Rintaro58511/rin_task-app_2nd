@@ -1,11 +1,10 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import case, select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from models.tasks import Task
 from schemas.tasks import UpdateAndCreateTaskSchema
+from sqlalchemy import case, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fetch_task(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> Task:

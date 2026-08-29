@@ -33,6 +33,7 @@ env:
   ECS_SERVICE: rin-task-app-task-service-05mi790b
   ECS_TASK_DEFINITION: rin-task-app-task
   CONTAINER_NAME: rin-task-app
+  SECRET_KEY: secret-key
 
 jobs:
   ci:

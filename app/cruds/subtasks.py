@@ -1,11 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from models.subtasks import SubTask
 from models.tasks import Task
 from schemas.subtasks import UpdateAndCreateSubTaskSchema
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def fetch_subtask(

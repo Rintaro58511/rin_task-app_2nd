@@ -3,9 +3,8 @@ from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from fastapi import HTTPException, status
-
 from enums import TaskStatus
+from fastapi import HTTPException, status
 from routers import subtasks
 from routers.subtasks import update_subtask
 

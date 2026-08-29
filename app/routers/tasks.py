@@ -1,9 +1,6 @@
 from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 import db
 from cruds.tasks import (
     add_task,
@@ -14,13 +11,16 @@ from cruds.tasks import (
     modify_task,
     remove_task,
 )
-from routers.user import get_current_user
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from schemas.tasks import (
     ResponseSchema,
     TaskSchema,
     TaskStatusSchema,
     UpdateAndCreateTaskSchema,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from routers.user import get_current_user
 
 router = APIRouter()
 
