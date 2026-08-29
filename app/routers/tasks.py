@@ -1,9 +1,6 @@
 from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
-from sqlalchemy.ext.asyncio import AsyncSession
-
 import db
 from cruds.tasks import (
     add_task,
@@ -12,15 +9,17 @@ from cruds.tasks import (
     fetch_tasks,
     filter_tasks,
     modify_task,
-    remove_task,
 )
-from routers.user import get_current_user
+from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 from schemas.tasks import (
     ResponseSchema,
     TaskSchema,
     TaskStatusSchema,
     UpdateAndCreateTaskSchema,
 )
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from routers.user import get_current_user
 
 router = APIRouter()
 
@@ -35,7 +34,8 @@ async def create_task(
 
     if task.task_deadline < date.today():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="期限が過去の日付になっています"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="期限が過去の日付になっています",
         )
 
     await add_task(task, current_user.user_id, db_session)
@@ -56,7 +56,8 @@ async def search_task(
 
     if task is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが見つかりません"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたタスクが見つかりません",
         )
     if task.user_id != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
@@ -134,11 +135,13 @@ async def update_task(
 
     if task.task_deadline < date.today():
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="期限が過去の日付になっています"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="期限が過去の日付になっています",
         )
     if target_task is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="指定されたタスクが存在しません"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="指定されたタスクが存在しません",
         )
     if target_task.user_id != current_user.user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
@@ -168,7 +171,8 @@ async def delete_task(
 
     if deleted_task is None:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが見つかりません"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="指定されたタスクが見つかりません",
         )
 
     return ResponseSchema(message="タスクを削除しました")

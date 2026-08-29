@@ -6,17 +6,16 @@ Create Date: 2026-08-22 15:05:39.603436
 
 """
 
-from typing import Sequence, Union
+from collections.abc import Sequence
 
 import sqlalchemy as sa
-
 from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "31cab90e4add"
-down_revision: Union[str, Sequence[str], None] = None
-branch_labels: Union[str, Sequence[str], None] = None
-depends_on: Union[str, Sequence[str], None] = None
+down_revision: str | Sequence[str] | None = None
+branch_labels: str | Sequence[str] | None = None
+depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
@@ -60,7 +59,9 @@ def upgrade() -> None:
         sa.Column("is_complete", sa.Boolean(), nullable=False),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column(
-            "priority", sa.Enum("HIGH", "MEDIUM", "LOW", name="subtaskpriority"), nullable=False
+            "priority",
+            sa.Enum("HIGH", "MEDIUM", "LOW", name="subtaskpriority"),
+            nullable=False,
         ),
         sa.ForeignKeyConstraint(["task_id"], ["tasks.task_id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("subtask_id"),

@@ -1,15 +1,19 @@
 import pytest
+from enums import TaskStatus
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
-
-from enums import TaskStatus
 from main import app
 from routers import subtasks
 
 
 @pytest.mark.anyio
 async def test_update_subtask(
-    monkeypatch, task, subtask, subtask_schema, override_get_db, override_get_current_user
+    monkeypatch,
+    task,
+    subtask,
+    subtask_schema,
+    override_get_db,
+    override_get_current_user,
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -39,7 +43,8 @@ async def test_update_subtask(
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}", json=subtask_schema.model_dump()
+            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
+            json=subtask_schema.model_dump(),
         )
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
@@ -48,7 +53,12 @@ async def test_update_subtask(
 
 @pytest.mark.anyio
 async def test_update_none_task(
-    monkeypatch, subtask, task, subtask_schema, override_get_db, override_get_current_user
+    monkeypatch,
+    subtask,
+    task,
+    subtask_schema,
+    override_get_db,
+    override_get_current_user,
 ):
 
     async def mock_fetch_none_task(task_id, user_id, db):
@@ -61,7 +71,8 @@ async def test_update_none_task(
         base_url="http://test",
     ) as ac:
         response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}", json=subtask_schema.model_dump()
+            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
+            json=subtask_schema.model_dump(),
         )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
@@ -70,7 +81,12 @@ async def test_update_none_task(
 
 @pytest.mark.anyio
 async def test_update_none_subtask(
-    monkeypatch, subtask, task, subtask_schema, override_get_db, override_get_current_user
+    monkeypatch,
+    subtask,
+    task,
+    subtask_schema,
+    override_get_db,
+    override_get_current_user,
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -85,7 +101,8 @@ async def test_update_none_subtask(
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}", json=subtask_schema.model_dump()
+            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
+            json=subtask_schema.model_dump(),
         )
     assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
