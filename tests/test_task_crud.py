@@ -121,12 +121,7 @@ async def test_add_task():
 async def test_remove_task(monkeypatch, test_task):
     mock_db = AsyncMock()
 
-    async def mock_fetch_task(task_id, mock_db):
-        return test_task
-
-    monkeypatch.setattr(tasks, "fetch_task", mock_fetch_task)
-
-    await remove_task(test_task.task_id, mock_db)
+    await remove_task(test_task, mock_db)
 
     mock_db.delete.assert_called_once()
     mock_db.commit.assert_called_once()

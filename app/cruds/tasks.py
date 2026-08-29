@@ -74,7 +74,7 @@ async def add_task(
     await db_session.refresh(new_task)
 
 
-async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
+async def remove_task(target_task: Task, db_session: AsyncSession) -> None:
     """
     引数のタスクIDと一致したタスクを削除する
 
@@ -83,7 +83,6 @@ async def remove_task(task_id: UUID, db_session: AsyncSession) -> None:
         db_session(AsyncSession): データベースの接続動作の依存性注入
 
     """
-    target_task = await fetch_task(task_id, db_session)
 
     if target_task:
         await db_session.delete(target_task)
