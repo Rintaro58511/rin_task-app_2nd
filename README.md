@@ -41,6 +41,7 @@ FastAPI / PostgreSQL を中心に構築した、ユーザー認証付きのタ�
   Cloud                AWS CloudFront / S3 / ALB / ECS Fargate / ECR / RDS
   CI/CD                GitHub Actions
   AWS Authentication   GitHub Actions OIDC / IAM Role
+  Code Quality         Ruff Lint/Formatter
 
 ------------------------------------------------------------------------
 
@@ -98,6 +99,7 @@ flowchart LR
 flowchart LR
     Push[Push to main]
     TestDB[(PostgreSQL Test DB)]
+    Ruff[linter/formatter]
     Pytest[Pytest]
     AlembicTest["Migration Test<br/>upgrade → downgrade → upgrade"]
     Build[Docker Buildx<br/>linux/arm64]
@@ -107,7 +109,8 @@ flowchart LR
     Health[ALB Health Check]
 
     Push --> TestDB
-    TestDB --> Pytest
+    TestDB --> Ruff
+    Ruff --> Pytests
     Pytest --> AlembicTest
     AlembicTest -->|Success| Build
     AlembicTest -->|Failure| Stop[Stop]
@@ -119,15 +122,16 @@ flowchart LR
 ```
 
 1.  GitHub Actions 上にテスト用 PostgreSQL を起動
-2.  Pytest を実行
-3. Alembicの upgrade → downgrade → upgrade を実行し、migrationの適用・ロールバック・再適用が正常に行えることを検証
-4.  テスト成功時のみ Docker イメージをビルド
-5.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
-6.  ECR へイメージを push
-7. ECS Task Definition を更新
-8. ECS one-off Taskで `alembic upgrade head` を実行
-9. migration成功時のみECS Serviceへローリングデプロイ
-10. ALBのヘルスチェックを通過後、デプロイ完了
+2.  RuffによるLint/Formatチェック
+3.  Pytest を実行
+4.  Alembicの upgrade → downgrade → upgrade を実行し、migrationの適用・ロールバック・再適用が正常に行えることを検証
+5.  テスト成功時のみ Docker イメージをビルド
+6.  Buildx / QEMU を利用して `linux/arm64` イメージを生成
+7.  ECR へイメージを push
+8. ECS Task Definition を更新
+9. ECS one-off Taskで `alembic upgrade head` を実行
+10. migration成功時のみECS Serviceへローリングデプロイ
+11. ALBのヘルスチェックを通過後、デプロイ完了
 
 GitHub Actions から AWS への認証には OIDC を利用し、AWS の長期 Access
 Key / Secret Access Key を GitHub に保存しない構成にしています。
