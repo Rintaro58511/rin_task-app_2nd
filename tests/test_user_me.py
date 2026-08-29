@@ -1,14 +1,15 @@
-import routers.user as user
+import uuid
+from unittest.mock import AsyncMock
+
+import pytest
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
+import db
+import routers.user as user
 from main import app
 from models.user import User
-from unittest.mock import AsyncMock
-import db
-import pytest
-import uuid
-from fastapi import HTTPException, status
-import jwt
-from routers.user import SECRET_KEY, ALGORITHM, create_access_token
+from routers.user import create_access_token
 
 
 @pytest.fixture
@@ -41,7 +42,7 @@ async def test_get_my_info_success(monkeypatch, override_get_db):
             "/user/me", headers={"Authorization": f"Bearer {token}"}
         )
 
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body["message"] == "ユーザ情報を取得しました。"
     assert body["user"]["user_name"] == "rintaro"

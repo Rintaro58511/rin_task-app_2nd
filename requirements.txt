@@ -16,3 +16,4 @@ pytest-asyncio
 email-validator
 pydantic_settings
 alembic
+ruff

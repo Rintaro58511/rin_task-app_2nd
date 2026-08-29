@@ -1,16 +1,24 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy import (
-    UUID,
-    ForeignKey,
-    Boolean,
-    String,
-    DateTime,
-    Enum as SQLEnum,
-)
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+from sqlalchemy import (
+    UUID,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    String,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
+)
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from db import Base
 from enums import SubTaskPriority
+
+if TYPE_CHECKING:
+    from models.tasks import Task
 
 class SubTask(Base):
     """サブタスク情報を管理するテーブル"""

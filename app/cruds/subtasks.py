@@ -1,12 +1,16 @@
-from schemas.subtasks import UpdateAndCreateSubTaskSchema
-from models.subtasks import SubTask
-from models.tasks import Task
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from uuid import UUID
 
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-async def fetch_subtask(subtask_id: UUID, user_id: UUID, db_session: AsyncSession) -> SubTask | None:
+from models.subtasks import SubTask
+from models.tasks import Task
+from schemas.subtasks import UpdateAndCreateSubTaskSchema
+
+
+async def fetch_subtask(
+    subtask_id: UUID, user_id: UUID, db_session: AsyncSession
+) -> SubTask | None:
     """
     サブタスク情報をサブタスクのIDを元にデータベースから探す
 
@@ -27,7 +31,9 @@ async def fetch_subtask(subtask_id: UUID, user_id: UUID, db_session: AsyncSessio
     return target_subtask
 
 
-async def fetch_subtasks(task_id: UUID, user_id: UUID, db_session: AsyncSession) -> list[SubTask]:
+async def fetch_subtasks(
+    task_id: UUID, user_id: UUID, db_session: AsyncSession
+) -> list[SubTask]:
     """
     タスクが持っている全てのサブタスク情報をデータベースから探す
 
@@ -76,7 +82,9 @@ async def add_subtask(
     db_session.add(new_subtask)
 
 
-async def remove_subtask(target_subtask: SubTask, db_session: AsyncSession) -> SubTask:
+async def remove_subtask(
+    target_subtask: SubTask, db_session: AsyncSession
+) -> SubTask:
     """
     引数のサブタスクを削除する
 

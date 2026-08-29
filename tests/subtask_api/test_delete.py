@@ -1,15 +1,20 @@
 import pytest
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
 from enums import TaskStatus
-
 from main import app
-
 from routers import subtasks
 
 
 @pytest.mark.anyio
-async def test_delete_subtask(monkeypatch, task, subtask, override_get_db, override_get_current_user):
+async def test_delete_subtask(
+    monkeypatch,
+    task,
+    subtask,
+    override_get_db,
+    override_get_current_user
+    ):
 
     async def mock_fetch_task(task_id, user_id, db):
         return task
@@ -37,12 +42,18 @@ async def test_delete_subtask(monkeypatch, task, subtask, override_get_db, overr
         response = await ac.delete(
             f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}"
         )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body["message"] == "サブタスクを削除しました"
 
 @pytest.mark.anyio
-async def test_delete_none_task(monkeypatch, subtask, task, override_get_db, override_get_current_user):
+async def test_delete_none_task(
+    monkeypatch,
+    subtask,
+    task,
+    override_get_db,
+    override_get_current_user
+    ):
 
     async def mock_fetch_none_task(task_id, user_id, db):
         return None
@@ -54,12 +65,18 @@ async def test_delete_none_task(monkeypatch, subtask, task, override_get_db, ove
         response = await ac.delete(
             f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}"
         )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
     assert body["detail"] == "指定されたタスクが存在しません"
 
 @pytest.mark.anyio
-async def test_delete_none_subtask(monkeypatch, subtask, task, override_get_db, override_get_current_user):
+async def test_delete_none_subtask(
+    monkeypatch,
+    subtask,
+    task,
+    override_get_db,
+    override_get_current_user
+    ):
 
     async def mock_fetch_task(task_id, user_id, db):
         return task
@@ -75,12 +92,18 @@ async def test_delete_none_subtask(monkeypatch, subtask, task, override_get_db, 
         response = await ac.delete(
             f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}"
         )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
     assert body["detail"] == "指定されたサブタスクが存在しません"
 
 @pytest.mark.anyio
-async def test_delete_other_task(monkeypatch, subtask, task, other_task, override_get_db, override_get_current_user):
+async def test_delete_other_task(
+    monkeypatch,
+    subtask,
+    task,
+    other_task,
+    override_get_db,
+    override_get_current_user):
 
     async def mock_fetch_task(task_id, user_id, db):
         return task
@@ -96,6 +119,6 @@ async def test_delete_other_task(monkeypatch, subtask, task, other_task, overrid
         response = await ac.delete(
             f"/tasks/{other_task.task_id}/subtasks/{subtask.subtask_id}"
         )
-    assert response.status_code == 400
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
     body = response.json()
     assert body["detail"] == "親タスクが異なります"

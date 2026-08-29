@@ -1,17 +1,21 @@
 import pytest
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
-from main import app
-
-from schemas.subtasks import UpdateAndCreateSubTaskSchema
-
-from routers import subtasks
-
 from enums import TaskStatus
+from main import app
+from routers import subtasks
+from schemas.subtasks import UpdateAndCreateSubTaskSchema
 
 
 @pytest.mark.asyncio
-async def test_create_subtask(monkeypatch, task, subtask_schema, override_get_db, override_get_current_user):
+async def test_create_subtask(
+    monkeypatch,
+    task,
+    subtask_schema,
+    override_get_db,
+    override_get_current_user
+    ):
 
     async def mock_fetch_task(task_id, user_id, db):
         return task
@@ -39,12 +43,17 @@ async def test_create_subtask(monkeypatch, task, subtask_schema, override_get_db
             f"/tasks/{task.task_id}/subtask",
             json = subtask_schema.model_dump()
         )
-    assert response.status_code == 201
+    assert response.status_code == status.HTTP_201_CREATED
     body = response.json()
     assert body["message"] == "サブタスクを登録しました"
 
 @pytest.mark.asyncio
-async def test_fail_create_subtask(monkeypatch, task, subtask_schema, override_get_db, override_get_current_user):
+async def test_fail_create_subtask(
+    monkeypatch,
+    task,
+    subtask_schema,
+    override_get_db,
+    override_get_current_user):
 
     async def mock_fetch_task(task_id, user_id, db):
         return None
@@ -57,6 +66,6 @@ async def test_fail_create_subtask(monkeypatch, task, subtask_schema, override_g
             f"/tasks/{task.task_id}/subtask",
             json = subtask_schema.model_dump()
         )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
     assert body["detail"] == "タスクが存在しません"

@@ -1,9 +1,10 @@
 import pytest
-from routers import user
-from routers import tasks
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
 from main import app
-from models.tasks import Task
+from routers import tasks
+
 
 @pytest.mark.anyio
 async def test_delete_task(monkeypatch, task, override_get_current_task_user, override_get_db):
@@ -24,6 +25,6 @@ async def test_delete_task(monkeypatch, task, override_get_current_task_user, ov
         response = await ac.delete(
             f"/tasks/{task.task_id}",
         )
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body["message"] == "タスクを削除しました"

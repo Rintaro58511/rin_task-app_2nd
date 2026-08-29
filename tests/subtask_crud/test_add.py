@@ -1,9 +1,10 @@
-from unittest.mock import MagicMock, AsyncMock
+import uuid
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 
-import uuid
-
 from cruds.subtasks import add_subtask
+
 
 @pytest.mark.anyio
 async def test_add_subtask(subtask_schema):
@@ -16,5 +17,5 @@ async def test_add_subtask(subtask_schema):
 
     mock_db.add.assert_called_once()
     assert mock_db.add.call_args.args[0].subtask_name == "test_subtask2"
-    assert mock_db.add.call_args.args[0].is_complete == True
+    assert mock_db.add.call_args.args[0].is_complete is True
     assert mock_db.add.call_args.args[0].task_id == task_id

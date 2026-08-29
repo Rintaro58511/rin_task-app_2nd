@@ -1,9 +1,15 @@
 import uuid
 from typing import Annotated
+
 from pydantic import (
-    BaseModel, Field, EmailStr, Secret,
-    SerializationInfo, PlainSerializer,
+    BaseModel,
+    EmailStr,
+    Field,
+    PlainSerializer,
+    Secret,
+    SerializationInfo,
 )
+
 
 class SecretEmail(Secret[EmailStr]):
     def _display(self) -> str:

@@ -1,16 +1,21 @@
-from unittest.mock import AsyncMock, MagicMock
-import pytest
 import uuid
-from fastapi import HTTPException
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+from fastapi import HTTPException, status
+
+from enums import TaskStatus
 from routers import subtasks
 from routers.subtasks import create_subtask
 
-from enums import TaskStatus
 
 @pytest.mark.anyio
-async def test_create_subtask(subtask_schema, task, monkeypatch):
+async def test_create_subtask(
+    subtask_schema,
+    task,
+    monkeypatch
+    ):
     mock_db = AsyncMock()
     mock_db.flush = AsyncMock()
     mock_db.commit = AsyncMock()
@@ -44,7 +49,12 @@ async def test_create_subtask(subtask_schema, task, monkeypatch):
     mock_db.commit.assert_awaited_once()
 
 @pytest.mark.anyio
-async def test_create_none_subtask(subtask_schema, task, monkeypatch, override_get_current_user):
+async def test_create_none_subtask(
+    subtask_schema,
+    task,
+    monkeypatch,
+    override_get_current_user
+    ):
     mock_db = AsyncMock()
     mock_db.flush = AsyncMock()
     mock_db.commit = AsyncMock()
@@ -60,7 +70,7 @@ async def test_create_none_subtask(subtask_schema, task, monkeypatch, override_g
         await create_subtask(subtask_schema, task_id, current_user, mock_db)
 
     assert exc_info.value.detail == "タスクが存在しません"
-    assert exc_info.value.status_code == 404
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert task.progress_ratio == 80
     mock_db.flush.assert_not_awaited()
     mock_db.commit.assert_not_awaited()

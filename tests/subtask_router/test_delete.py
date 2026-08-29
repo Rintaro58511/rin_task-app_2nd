@@ -1,18 +1,21 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 import uuid
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from fastapi import HTTPException
-
-from routers.subtasks import delete_subtask
-from routers import subtasks
+import pytest
+from fastapi import HTTPException, status
 
 from enums import TaskStatus
+from routers import subtasks
+from routers.subtasks import delete_subtask
 
 
 @pytest.mark.anyio
-async def test_delete_subtask(subtask, task, monkeypatch):
+async def test_delete_subtask(
+    subtask,
+    task,
+    monkeypatch
+    ):
     mock_db = AsyncMock()
     current_user = MagicMock()
     current_user.user_id = uuid.uuid4()
@@ -37,7 +40,12 @@ async def test_delete_subtask(subtask, task, monkeypatch):
         return TaskStatus.IN_PROGRESS
     monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
 
-    response = await delete_subtask(subtask.subtask_id, subtask.task_id, current_user, mock_db)
+    response = await delete_subtask(
+        subtask.subtask_id,
+        subtask.task_id,
+        current_user,
+        mock_db
+        )
 
     assert response.message == "サブタスクを削除しました"
     assert task.progress_ratio == 50
@@ -46,7 +54,11 @@ async def test_delete_subtask(subtask, task, monkeypatch):
     mock_db.commit.assert_awaited_once()
 
 @pytest.mark.anyio
-async def test_delete_all_subtask(subtask, task, monkeypatch):
+async def test_delete_all_subtask(
+    subtask,
+    task,
+    monkeypatch
+    ):
     mock_db = AsyncMock()
     current_user = MagicMock()
     current_user.user_id = uuid.uuid4()
@@ -71,7 +83,12 @@ async def test_delete_all_subtask(subtask, task, monkeypatch):
         return TaskStatus.TODO
     monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
 
-    response = await delete_subtask(subtask.subtask_id, subtask.task_id, current_user, mock_db)
+    response = await delete_subtask(
+        subtask.subtask_id,
+        subtask.task_id,
+        current_user,
+        mock_db
+        )
 
     assert response.message == "サブタスクを削除しました"
     assert task.progress_ratio == 80
@@ -93,7 +110,7 @@ async def test_delete_none_task(subtask, monkeypatch):
     with pytest.raises(HTTPException) as exc_info:
         await delete_subtask(subtask.subtask_id, subtask.task_id, current_user, mock_db)
 
-    assert exc_info.value.status_code == 404
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたタスクが存在しません"
 
 @pytest.mark.anyio
@@ -113,7 +130,7 @@ async def test_delete_none_subtask(task, subtask, monkeypatch):
     with pytest.raises(HTTPException) as exc_info:
         await delete_subtask(subtask.subtask_id, subtask.task_id, current_user, mock_db)
 
-    assert exc_info.value.status_code == 404
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたサブタスクが存在しません"
 
 @pytest.mark.anyio
@@ -133,5 +150,5 @@ async def test_delete_other_task(task, subtask, other_task, monkeypatch):
     with pytest.raises(HTTPException) as exc_info:
         await delete_subtask(subtask.subtask_id, other_task.task_id, current_user, mock_db)
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
     assert exc_info.value.detail == "親タスクが異なります"

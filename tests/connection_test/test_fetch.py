@@ -1,7 +1,9 @@
 import pytest
+from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
 from main import app
+
 
 @pytest.mark.asyncio
 async def test_search_other_user_subtask(
@@ -18,4 +20,4 @@ async def test_search_other_user_subtask(
         response = await ac.get(
                 f"/tasks/subtasks/{test_subtask.subtask_id}"
             )
-    assert response.status_code == 404
+    assert response.status_code == status.HTTP_404_NOT_FOUND

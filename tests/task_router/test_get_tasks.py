@@ -1,12 +1,14 @@
-import pytest
-import routers.user as user
-import routers.tasks as task
-from httpx import ASGITransport, AsyncClient
-from main import app
 import uuid
-from datetime import datetime, date
-from models.tasks import Task
+from datetime import date, datetime
+
+import pytest
+from fastapi import status
+from httpx import ASGITransport, AsyncClient
+
+import routers.tasks as task
 from enums import TaskStatus
+from main import app
+from models.tasks import Task
 
 
 @pytest.mark.anyio
@@ -59,7 +61,7 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.get("/tasks")
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task"
     assert body[1]["task_name"] == "test_task2"
@@ -121,7 +123,7 @@ async def test_get_sorted_deadline_tasks(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.get("/tasks", params={"sort": "deadline"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task2"
     assert body[1]["task_name"] == "test_task3"
@@ -183,7 +185,7 @@ async def test_get_sorted_status_tasks(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.get("/tasks", params={"sort": "status"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert body[0]["task_name"] == "test_task"
     assert body[1]["task_name"] == "test_task2"
@@ -245,7 +247,7 @@ async def test_get_filtered_tasks(
         transport=ASGITransport(app=app), base_url="http://test"
     ) as ac:
         response = await ac.get("/tasks", params={"search_name": "python"})
-    assert response.status_code == 200
+    assert response.status_code == status.HTTP_200_OK
     body = response.json()
     assert len(body) == 2
     assert body[0]["task_name"] == "python"

@@ -1,12 +1,14 @@
-import time
+import random
+import uuid
+from datetime import date, datetime, timezone
+
 import pytest
 from sqlalchemy import text
+
+from enums import TaskStatus
 from models.tasks import Task
 from models.user import User
-from enums import TaskStatus
-import uuid
-from datetime import datetime, timezone, date
-import random
+
 
 @pytest.mark.asyncio
 async def test_task_arrange_deadline_performance(init_test_db, db_session):

@@ -1,7 +1,9 @@
 from unittest.mock import AsyncMock
+
 import pytest
 
 from cruds.subtasks import remove_subtask
+
 
 @pytest.mark.anyio
 async def test_remove_subtask(subtask, monkeypatch):

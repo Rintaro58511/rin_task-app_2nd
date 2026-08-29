@@ -1,14 +1,14 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock
 import uuid
 from datetime import datetime, timezone
+from unittest.mock import AsyncMock, MagicMock
 
-from fastapi import HTTPException
-
-from routers.subtasks import update_subtask
-from routers import subtasks
+import pytest
+from fastapi import HTTPException, status
 
 from enums import TaskStatus
+from routers import subtasks
+from routers.subtasks import update_subtask
+
 
 @pytest.mark.anyio
 async def test_update_subtask(subtask_schema, subtask, task, monkeypatch):
@@ -36,7 +36,13 @@ async def test_update_subtask(subtask_schema, subtask, task, monkeypatch):
         return TaskStatus.IN_PROGRESS
     monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
 
-    response = await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db)
+    response = await update_subtask(
+        subtask_schema,
+        subtask.subtask_id,
+        subtask.task_id,
+        current_user,
+        mock_db
+        )
 
     assert response.message == "サブタスクを更新しました"
     assert task.progress_ratio == 50
@@ -56,9 +62,15 @@ async def test_update_none_task(subtask_schema, subtask, monkeypatch):
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_none_task)
 
     with pytest.raises(HTTPException) as exc_info:
-        await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db)
+        await update_subtask(
+            subtask_schema,
+            subtask.subtask_id,
+            subtask.task_id,
+            current_user,
+            mock_db
+            )
 
-    assert exc_info.value.status_code == 404
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたタスクが存在しません"
 
 @pytest.mark.anyio
@@ -76,9 +88,15 @@ async def test_update_none_subtask(subtask_schema, task, subtask, monkeypatch):
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
 
     with pytest.raises(HTTPException) as exc_info:
-        await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db)
+        await update_subtask(
+            subtask_schema,
+            subtask.subtask_id,
+            subtask.task_id,
+            current_user,
+            mock_db
+            )
 
-    assert exc_info.value.status_code == 404
+    assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたサブタスクが存在しません"
 
 @pytest.mark.anyio
@@ -96,7 +114,13 @@ async def test_update_other_task(subtask_schema, task, subtask, other_task, monk
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
 
     with pytest.raises(HTTPException) as exc_info:
-        await update_subtask(subtask_schema, subtask.subtask_id, other_task.task_id, current_user, mock_db)
+        await update_subtask(
+            subtask_schema,
+            subtask.subtask_id,
+            other_task.task_id,
+            current_user,
+            mock_db
+            )
 
-    assert exc_info.value.status_code == 400
+    assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
     assert exc_info.value.detail == "親タスクが異なります"

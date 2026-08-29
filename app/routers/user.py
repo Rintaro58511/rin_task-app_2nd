@@ -1,52 +1,43 @@
-from fastapi import APIRouter, status, HTTPException, Depends
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from schemas.user import UserSchema, UserInDB, ResponseSchema
-from cruds.user import add_user, fetch_user_by_email, authenticate_user
-from sqlalchemy.ext.asyncio import AsyncSession
-import db
-import os
-import jwt
-from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta, timezone
-from schemas.auth import TokenData, Token
 from typing import Annotated
-from models.user import User
-import traceback
 
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jwt.exceptions import InvalidTokenError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+import db
+from config import settings
+from cruds.user import add_user, authenticate_user, fetch_user_by_email
+from models.user import User
+from schemas.auth import Token
+from schemas.user import ResponseSchema, UserInDB, UserSchema
 
 router = APIRouter(prefix="/user")
-
 
 @router.post(
     "/signup", response_model=ResponseSchema, status_code=status.HTTP_201_CREATED
 )
 async def signup_user(
     user: UserInDB, db_session: AsyncSession = Depends(db.get_db_session)
-):
-    try:
-        new_user = await add_user(user, db_session)
-        dict_user = UserSchema(
-            user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
-        )
-        return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
-    except HTTPException as he:
-        raise he
+) -> ResponseSchema:
+    
+    new_user = await add_user(user, db_session)
+    dict_user = UserSchema(
+        user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
+    )
+    return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
 
-    except Exception:
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=400,
-            detail="ユーザーの登録に失敗しました。"
-        )
-
-
-SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = settings.secret_key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/token")
 
-
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(
+    data: dict, expires_delta: timedelta | None = None
+) -> str:
+    
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
@@ -62,7 +53,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db_session: AsyncSession = Depends(db.get_db_session),
-):
+) -> User:
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="認証に失敗しました",
@@ -73,9 +65,8 @@ async def get_current_user(
         email = payload.get("sub")
         if email is None:
             raise credentials_exception
-        token_data = TokenData(email=email)
     except InvalidTokenError:
-        raise credentials_exception
+        raise credentials_exception from None
     user = await fetch_user_by_email(email, db_session)
     if user is None:
         raise credentials_exception
@@ -86,10 +77,10 @@ async def get_current_user(
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     db_session: AsyncSession = Depends(db.get_db_session),
-):
+) -> Token:
 
     user = await authenticate_user(
-        form_data.username,  # メールアドレスを入れるためemailとしたいが決まりでusernameにしないといけないらしい
+        form_data.username,
         form_data.password,
         db_session,
     )
@@ -105,9 +96,10 @@ async def login_for_access_token(
     )
     return Token(access_token=access_token, token_type="bearer")
 
-
 @router.get("/me", response_model=ResponseSchema)
-async def get_my_info(current_user: User = Depends(get_current_user)):
+async def get_my_info(current_user: User = Depends(get_current_user)
+) -> ResponseSchema:
+    
     dict_user = UserSchema(
         user_id=current_user.user_id,
         user_name=current_user.user_name,
