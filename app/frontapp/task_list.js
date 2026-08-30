@@ -1,4 +1,4 @@
-const apiUrl = "https://d25ee7cqp3i4lf.cloudfront.net/tasks";
+const apiUrl = `${API_BASE_URL}/tasks`;
 let currentSort = localStorage.getItem('currentSort') || null;
 
 function getCreateAndUpdateTime(){
@@ -66,7 +66,7 @@ addButton.addEventListener("click", function(){
 
                 <div class="mb-3">
                     <label for="taskDetail" class="form-label">タスク詳細</label>
-                    <input type="text" id="taskDetail" class="form-control" placeholder="タスク詳細" required>
+                    <input type="text" id="taskDetail" class="form-control" placeholder="タスク詳細">
                 </div>
 
                 <div class="mb-3">
@@ -190,7 +190,7 @@ function displayTasks(tasks){
             : 'なし';
         htmlContent += `
             <div class="col" id="task-card-${task.task_id}">
-                <div class="card mb-3" style="width: 18rem;">
+                <div class="card mb-3 task-card">
                     <div class="card-body">
                         <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
                             <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%" data-task-bar="${task.task_id}"></div>
@@ -200,9 +200,9 @@ function displayTasks(tasks){
                         <h6 class="card-subtitle mb-2 text-body-secondary" data-task-status="${task.task_id}">状態: ${task.task_status.task_progress}</h6>
                         <p class="card-text">${task.task_detail}</p>
                         <div id="subTaskList-${task.task_id}"></div>
+                        <button type="button" class="btn btn-success w-100 mt-2 addSubTaskButton" data-id="${task.task_id}">サブタスクの追加</button>
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
-                        <button type="button" class="btn btn-success w-100 mt-2 addSubTaskButton" data-id="${task.task_id}">サブタスクの追加</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
                     </div>
@@ -257,7 +257,6 @@ async function deleteTask(taskId){
     }
 }
 
-const updateButton = document.getElementById('updateButton');
 
 async function updateTask(taskId){
 
@@ -276,84 +275,87 @@ async function updateTask(taskId){
         }
 
         const etag = response_for_get.headers.get("ETag");
-        console.log("GET ETag:", etag);
-
         const task = await response_for_get.json();
-        const updateTaskForm = document.getElementById('updateTaskForm');
-
-        updateTaskForm.innerHTML = `
-            <div class="card mb-3" style="width: 20rem; border-color: yellow;">
-                <div class="card-body">
+        
+        const targetCard = document.getElementById(`task-card-${taskId}`);
+        if (!targetCard) {
+                return;
+        }
+        targetCard.innerHTML = `
+        <div class="card mb-3 task-card">
+            <div class="card-body">
+                <form class="form-update">
                     <h5>タスクの編集</h5>
-                    <input type="hidden" id="updateTaskId" value="${task.task_id}">
-                    <input type="hidden" id="updateTaskEtag" value="${etag}">
+                    <input type="hidden" class="updateTaskId" value="${task.task_id}">
+                    <input type="hidden" class="updateTaskEtag" value="${etag}">
                     
                     <div class="mb-3">
                         <label for="updateTaskName" class="form-label">タスク名</label>
-                        <input type="text" id="updateTaskName" class="form-control" value="${task.task_name}" required>
+                        <input type="text" class="updateTaskName form-control" value="${task.task_name}" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="updateTaskDeadline" class="form-label">タスク締切</label>
-                        <input type="date" id="updateTaskDeadline" class="form-control" value="${task.task_deadline}" required>
+                        <input type="date" class="updateTaskDeadline form-control" value="${task.task_deadline}" required>
                     </div>
 
                     <div class="mb-3">
                         <label for="updateTaskDetail" class="form-label">タスク詳細</label>
-                        <input type="text" id="updateTaskDetail" class="form-control" value="${task.task_detail}" required>
+                        <input type="text" class="updateTaskDetail form-control" value="${task.task_detail}" required>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3 updateTaskProgress">
                         <label class="form-label" for="taskProgress">タスク進捗</label>
                         <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status.task_progress === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusTodo" value="TODO" ${task.task_status.task_progress === 'TODO' ? 'checked' : ''} onchange="toggleProgressInput(this)">
                             <label class="btn btn-outline-warning" for="statusTodo">TODO</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS" ${task.task_status.task_progress === 'IN_PROGRESS' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusProgress" value="IN_PROGRESS" ${task.task_status.task_progress === 'IN_PROGRESS' ? 'checked' : ''} onchange="toggleProgressInput(this)">
                             <label class="btn btn-outline-warning" for="statusProgress">IN_PROGRESS</label>
 
-                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE" ${task.task_status.task_progress === 'DONE' ? 'checked' : ''} onchange="toggleProgressInput()">
+                            <input type="radio" class="btn-check" name="updateTaskStatus" id="statusDone" value="DONE" ${task.task_status.task_progress === 'DONE' ? 'checked' : ''} onchange="toggleProgressInput(this)">
                             <label class="btn btn-outline-warning" for="statusDone">DONE</label>
                         </div>
                         <div class="input-group mb-3">
-                            <input type="number" id="progressRatio" class="form-control" value="${task.task_status.progress_ratio}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
+                            <input type="number" class="progressRatio form-control" value="${task.task_status.progress_ratio}" min="0" max="100" step="1" required ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
                             <span class="input-group-text">%</span>
                         </div>
-                        <input type="text" id="progressComment" class="form-control" value="${task.task_status.progress_comment}" ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
+                        <input type="text" class="progressComment form-control" value="${task.task_status.progress_comment}" ${task.task_status.task_progress !== 'IN_PROGRESS' ? 'disabled' : ''}>
 
                     </div>
 
                     <button type="submit" class="btn btn-warning w-100 mt-2">変更を保存</button>
                     <button type="button" class="btn btn-secondary w-100 mt-1" onclick="cancelUpdate('${task.task_id}')">キャンセル</button>
-                </div>
+                </form>
             </div>
-        `;
-        const targetCard = document.getElementById(`task-card-${taskId}`);
-        if (targetCard) {
-            targetCard.style.display = 'none';
-        }
+        </div>
+        `
     }catch(error){
         console.error('タスク取得中にエラーが発生しました', error);
     }
 }
 
-const updateTaskForm = document.getElementById('updateTaskForm');
-updateTaskForm.addEventListener('submit', async function(event){
+document.getElementById('taskList').addEventListener('submit', async function(event) {
+
+    if (!event.target.classList.contains('form-update')) {
+        return;
+    }
 
     event.preventDefault();
 
-    const taskId = document.getElementById('updateTaskId').value;
-    const etag = document.getElementById('updateTaskEtag').value;
+    const form = event.target;
+    const taskId = form.querySelector('.updateTaskId').value;
+    const etag = form.querySelector('.updateTaskEtag').value;
     const token = getToken();
 
     const taskData = {
-    task_name: document.getElementById('updateTaskName').value,
-    task_deadline: document.getElementById('updateTaskDeadline').value,
-    task_detail: document.getElementById('updateTaskDetail').value,
+    task_name: form.querySelector('.updateTaskName').value,
+    task_deadline: form.querySelector('.updateTaskDeadline').value,
+    task_detail: form.querySelector('.updateTaskDetail').value,
     task_status: {
-        task_progress: document.querySelector('input[name="updateTaskStatus"]:checked').value,
-        progress_ratio: document.getElementById('progressRatio').value,
-        progress_comment: document.getElementById('progressComment').value 
+        task_progress: form.querySelector('input[name="updateTaskStatus"]:checked').value,
+        progress_ratio: form.querySelector('.progressRatio').value,
+        progress_comment: form.querySelector('.progressComment').value 
         }
     };
 
@@ -370,7 +372,6 @@ updateTaskForm.addEventListener('submit', async function(event){
 
         if (response.ok) {
             alert("タスクを更新しました");
-            updateTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
         }else if(response.status === 401) {
             alert("認証エラーが発生しました。再度ログインしてください。");
@@ -378,7 +379,6 @@ updateTaskForm.addEventListener('submit', async function(event){
             window.location.href = "./login.html";
         } else if (response.status === 412) {
             alert("このタスクは他のユーザーによって更新されました。最新の情報を再取得してください。");
-            updateTaskForm.innerHTML = '';
             fetchAndDisplayTasks();
         } else {
             const err = await response.json();
@@ -389,13 +389,8 @@ updateTaskForm.addEventListener('submit', async function(event){
     }
 });
 
-function cancelUpdate(taskId) {
-    document.getElementById('updateTaskForm').innerHTML = '';
-    
-    const targetCard = document.getElementById(`task-card-${taskId}`);
-    if (targetCard) {
-        targetCard.style.display = 'block';
-    }
+function cancelUpdate() {
+    fetchAndDisplayTasks();
 }
 
 const sortDeadline = document.getElementById('sortDeadline');
@@ -483,10 +478,11 @@ searchForm.addEventListener("submit", async function(event){
     }
 })
 
-function toggleProgressInput() {
-    const selectedStatus = document.querySelector('input[name="updateTaskStatus"]:checked').value;
-    const progressInput = document.getElementById('progressRatio');
-    const commentInput = document.getElementById('progressComment');
+function toggleProgressInput(radio) {
+    const form = radio.closest('.form-update');
+    const selectedStatus = form.querySelector('input[name="updateTaskStatus"]:checked').value;
+    const progressInput = form.querySelector('.progressRatio');
+    const commentInput = form.querySelector('.progressComment');
 
     if (selectedStatus === 'IN_PROGRESS') {
         progressInput.disabled = false;
