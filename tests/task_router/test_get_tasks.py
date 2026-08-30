@@ -2,10 +2,11 @@ import uuid
 from datetime import date, datetime
 
 import pytest
-import routers.tasks as task
-from enums import TaskStatus
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
+import routers.tasks as task
+from enums import TaskStatus
 from main import app
 from models.tasks import Task
 

@@ -3,6 +3,7 @@ from datetime import date, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+
 from cruds.tasks import (
     add_task,
     arrange_tasks,

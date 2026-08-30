@@ -1,6 +1,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
+
 from enums import TaskStatus
 from service.subtasks import check_progress
 
