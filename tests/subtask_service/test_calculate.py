@@ -3,6 +3,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock
 
 import pytest
+
 from models.subtasks import SubTask
 from service import subtasks
 from service.subtasks import calculate_ratio
