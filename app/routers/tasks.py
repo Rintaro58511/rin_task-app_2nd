@@ -12,6 +12,7 @@ from cruds.tasks import (
     fetch_tasks,
     filter_tasks,
     modify_task,
+    remove_task,
 )
 from routers.user import get_current_user
 from schemas.tasks import (
@@ -174,5 +175,7 @@ async def delete_task(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが見つかりません",
         )
+
+    await remove_task(deleted_task, db_session)
 
     return ResponseSchema(message="タスクを削除しました")
