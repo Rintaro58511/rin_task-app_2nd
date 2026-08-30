@@ -204,7 +204,7 @@ function displayTasks(tasks){
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
-                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
+                        <!-- <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6> -->
                     </div>
                 </div>
             </div>
