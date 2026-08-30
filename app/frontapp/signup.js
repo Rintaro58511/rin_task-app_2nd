@@ -1,4 +1,4 @@
-const apiUrl = "https://d25ee7cqp3i4lf.cloudfront.net/user/signup"
+const apiUrl = `${API_BASE_URL}/user/signup`
 
 function displayMessage(messages){
 const container = document.getElementById('errorContainer');

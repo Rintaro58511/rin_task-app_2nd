@@ -162,29 +162,32 @@ document.getElementById("taskList").addEventListener("click", async function(eve
 
     if(event.target.classList.contains("updateSubTaskButton")){
         const labelToInput = document.querySelector(`[data-subtask-name="${subTaskId}"]`)
-        labelToInput.innerHTML = `<input
-                                        type="text"
-                                        id="subTaskName-${subTaskId}"
-                                        class="form-control"
-                                        placeholder="サブタスク名を入力"
-                                        required
-                                    >
-                                    <button
-                                        type="button"
-                                        class="btn btn-warning w-100 mt-2 updateCompleteButton"
-                                        data-id = "${subTaskId}"
-                                        data-task-id = "${taskId}"
-                                    >
-                                        登録完了
-                                    </button>
+        labelToInput.innerHTML = `
+        <input
+            type="text"
+            id="subTaskName-${subTaskId}"
+            class="form-control form-control-sm"
+            placeholder="サブタスク名を入力"
+            required
+        >
+            <div class="d-flex gap-2">
+                <button
+                    type="button"
+                    class="btn btn-warning w-100 mt-1 subtask-action-btn updateCompleteButton"
+                    data-id = "${subTaskId}"
+                    data-task-id = "${taskId}"
+                >
+                    登録完了
+                </button>
 
-                                    <button
-                                        type="button"
-                                        class="btn btn-secondary w-100 mt-1 cancelSubTaskButton"
-                                        data-task-id = "${taskId}"
-                                    >
-                                        キャンセル
-                                    </button>`
+                <button
+                    type="button"
+                    class="btn btn-secondary w-100 mt-1 subtask-action-btn cancelSubTaskButton"
+                    data-task-id = "${taskId}"
+                >
+                    キャンセル
+                </button>
+            </div>`
     }
 
     if(event.target.classList.contains("updateCompleteButton")){
@@ -267,7 +270,7 @@ function displaySubTasks(taskId, subTasks){
             <div id="subtask-${subTask.subtask_id}">
                 <div class="d-flex w-100 align-items-center">
                     <div class="d-flex gap-2 pe-3">
-                        <div class="form-check form-switch">
+                        <div class="form-check form-switch d-flex align-items-center gap-2">
                             <input
                                 class="form-check-input subTaskCheck"
                                 type="checkbox"
@@ -279,7 +282,7 @@ function displaySubTasks(taskId, subTasks){
                                 ${subTask.is_complete ? 'checked' : ''}
                             >
                             <label
-                                class="form-check-label"
+                                class="form-check-label" style="width: 10rem;"
                                 for="isComplete-${subTask.subtask_id}"
                                 data-subtask-name="${subTask.subtask_id}"
                             >
@@ -288,14 +291,14 @@ function displaySubTasks(taskId, subTasks){
                         </div>
                     </div>
                     <div class="d-flex ms-auto gap-2 pe-3">
-                        <button type="button" class="btn btn-danger btn-sm deleteSubTaskButton"
+                        <button type="button" class="btn btn-danger btn-sm subtask-action-btn deleteSubTaskButton"
                             data-id="${subTask.subtask_id}"
                             data-task-id="${taskId}"
                         >
                             削除
                         </button>
                         
-                        <button type="button" class="btn btn-warning btn-sm updateSubTaskButton"
+                        <button type="button" class="btn btn-warning btn-sm subtask-action-btn updateSubTaskButton"
                             data-id="${subTask.subtask_id}"
                             data-task-id="${taskId}"
                         >
