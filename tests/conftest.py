@@ -133,7 +133,20 @@ def test_subtask(test_task):
 
 
 @pytest.fixture
-def override_get_test_current_user(test_other_user):
+def override_get_test_current_user(test_user):
+
+    async def override_test_user():
+        yield test_user
+
+    app.dependency_overrides[user.get_current_user] = override_test_user
+
+    yield
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def override_get_test_other_user(test_other_user):
 
     async def override_test_user():
         yield test_other_user
