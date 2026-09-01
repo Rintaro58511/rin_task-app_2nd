@@ -40,7 +40,7 @@ async def create_task(
         )
 
     await add_task(task, current_user.user_id, db_session)
-    return ResponseSchema(message="タスク追加ができました")
+    return ResponseSchema(message="タスクを登録しました")
 
 
 @router.get("/tasks/{task_id}", response_model=TaskSchema)

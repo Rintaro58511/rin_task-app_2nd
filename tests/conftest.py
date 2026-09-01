@@ -166,15 +166,17 @@ async def connection_test(
     test_other_user,
     test_task,
     test_subtask,
+    other_task
 ):
     db_session.add(test_user)
     db_session.add(test_other_user)
     db_session.add(test_task)
     db_session.add(test_subtask)
+    db_session.add(other_task)
 
     await db_session.commit()
 
-    yield test_user, test_other_user, test_task, test_subtask
+    yield test_user, test_other_user, test_task, test_subtask, other_task
 
 
 @pytest.fixture
@@ -239,10 +241,10 @@ def task(subtask):
 
 
 @pytest.fixture
-def other_task():
+def other_task(test_user):
     expeted_task = Task(
         task_id=uuid.uuid4(),
-        user_id=uuid.uuid4(),
+        user_id=test_user.user_id,
         task_name="test_task",
         task_deadline=date(2026, 9, 20),
         task_detail=None,
