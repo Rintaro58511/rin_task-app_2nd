@@ -127,7 +127,7 @@ def test_subtask(test_task):
         task_id=test_task.task_id,
         subtask_name="test_subtask",
         is_complete=False,
-        created_at=datetime(2026, 8, 15),
+        created_at=datetime(2026, 8, 15, tzinfo=timezone.utc),
     )
     return expected_subtask
 

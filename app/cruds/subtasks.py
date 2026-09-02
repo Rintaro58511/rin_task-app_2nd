@@ -8,9 +8,7 @@ from models.tasks import Task
 from schemas.subtasks import UpdateAndCreateSubTaskSchema
 
 
-async def fetch_subtask(
-    subtask_id: UUID, user_id: UUID, db_session: AsyncSession
-) -> SubTask | None:
+async def fetch_subtask(subtask_id: UUID, user_id: UUID, db_session: AsyncSession) -> SubTask | None:
     """
     サブタスク情報をサブタスクのIDを元にデータベースから探す
 

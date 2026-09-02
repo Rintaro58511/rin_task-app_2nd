@@ -31,7 +31,11 @@ class SubTask(Base):
     )
     subtask_name: Mapped[str] = mapped_column(String(30), nullable=False)
     is_complete: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.now,
+    )
     priority: Mapped[SubTaskPriority] = mapped_column(
         SQLEnum(SubTaskPriority), default=SubTaskPriority.MEDIUM, nullable=False
     )

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from fastapi import status
@@ -21,7 +21,7 @@ async def test_search_subtask(
     assert test_task.task_name == "test_task"
     assert test_task.progress_ratio == 80
     assert test_subtask.subtask_name == "test_subtask"
-    assert test_subtask.created_at == datetime(2026, 8, 15)
+    assert test_subtask.created_at == datetime(2026, 8, 15, tzinfo=timezone.utc)
 
 
 @pytest.mark.asyncio

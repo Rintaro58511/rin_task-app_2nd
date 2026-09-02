@@ -103,12 +103,16 @@ async def update_subtask(
 
     task = await fetch_task(task_id, current_user.user_id, db_session)
     if task is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません"
+        )
 
     target_subtask = await fetch_subtask(subtask_id, current_user.user_id, db_session)
 
     if target_subtask is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたサブタスクが存在しません")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたサブタスクが存在しません"
+        )
 
     if task_id != target_subtask.task_id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="親タスクが異なります")

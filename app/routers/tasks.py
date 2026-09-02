@@ -60,7 +60,7 @@ async def search_task(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが見つかりません",
         )
-    
+
     etag = f'"{int(task.changed_time.timestamp())}"'
 
     if if_none_match == etag:
@@ -145,7 +145,9 @@ async def update_task(
             detail="指定されたタスクが存在しません",
         )
     if target_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません"
+        )
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
 

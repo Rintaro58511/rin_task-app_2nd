@@ -9,9 +9,9 @@ services:
     ports:
       - "127.0.0.1:8002:8000"
     volumes:
-      - ./app:/usr/src/app
-      - ./tests:/usr/src/app/tests
-      - ./pyproject.toml:/usr/src/app/pyproject.toml
+      - ./app:/usr/src/task_management/app
+      - ./tests:/usr/src/task_management/tests
+      - ./pyproject.toml:/usr/src/task_management/pyproject.toml
     depends_on:
       db:
         condition: service_healthy
@@ -64,7 +64,7 @@ services:
       DATABASE_PORT: 5432
       DATABASE_NAME: ${POSTGRES_DB_TEST:?POSTGRES_DB_TEST is required}
     volumes:
-      - ./tests:/usr/src/app/tests
+      - ./tests:/usr/src/task_management/tests
     depends_on:
       db-test:
         condition: service_healthy

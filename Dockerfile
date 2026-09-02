@@ -9,10 +9,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     PIP_NO_CACHE_DIR=1 \
-    PYTHONPATH=/usr/src/app \
+    PYTHONPATH=/usr/src/task_management/app \
     PATH="/opt/venv/bin:${PATH}"
 
-WORKDIR /usr/src/app
+WORKDIR /usr/src/task_management
 
 # -----------------------------
 # 依存関係のインストール
@@ -41,8 +41,10 @@ RUN groupadd --gid 10001 appgroup \
         --shell /usr/sbin/nologin \
         appuser
 
-COPY --chown=appuser:appgroup app/ ./
-COPY --chown=appuser:appgroup tests/ /usr/src/app/tests/
+RUN chown appuser:appgroup /usr/src/task_management
+
+COPY --chown=appuser:appgroup app/ /usr/src/task_management/app
+COPY --chown=appuser:appgroup tests/ /usr/src/task_management/tests
 
 USER appuser
 
@@ -65,7 +67,7 @@ RUN groupadd --gid 10001 appgroup \
         --shell /usr/sbin/nologin \
         appuser
 
-COPY --chown=appuser:appgroup app/ ./
+COPY --chown=appuser:appgroup app/ /usr/src/task_management/app
 
 USER appuser
 

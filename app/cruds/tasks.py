@@ -46,9 +46,7 @@ async def fetch_tasks(user_id: UUID, db_session: AsyncSession) -> list[Task]:
     return target_tasks
 
 
-async def add_task(
-    task: UpdateAndCreateTaskSchema, user_id: UUID, db_session: AsyncSession
-) -> None:
+async def add_task(task: UpdateAndCreateTaskSchema, user_id: UUID, db_session: AsyncSession) -> None:
     """
     データベースにタスクを追加する
 
