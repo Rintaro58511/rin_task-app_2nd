@@ -60,9 +60,7 @@ async def search_task(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが見つかりません",
         )
-    if task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
-
+    
     etag = f'"{int(task.changed_time.timestamp())}"'
 
     if if_none_match == etag:
@@ -80,6 +78,7 @@ async def search_task(
         task_name=task.task_name,
         task_deadline=task.task_deadline,
         task_detail=task.task_detail,
+        changed_time=task.changed_time,
         task_status=task_status,
     )
 
@@ -115,6 +114,7 @@ async def get_tasks(
             task_name=task.task_name,
             task_deadline=task.task_deadline,
             task_detail=task.task_detail,
+            changed_time=task.changed_time,
             task_status=task_status,
         )
         tasks_pydantic.append(task_pydantic)
@@ -141,11 +141,11 @@ async def update_task(
         )
     if target_task is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが存在しません",
         )
     if target_task.user_id != current_user.user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="他ユーザーのタスクです")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません")
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
 

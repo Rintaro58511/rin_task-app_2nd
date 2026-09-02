@@ -246,7 +246,7 @@ def other_task(test_user):
         task_id=uuid.uuid4(),
         user_id=test_user.user_id,
         task_name="test_task",
-        task_deadline=date(2026, 9, 20),
+        task_deadline=date(2026, 9, 19),
         task_detail=None,
         changed_time=datetime(2026, 8, 16, tzinfo=timezone.utc),
         task_progress=TaskStatus.TODO,

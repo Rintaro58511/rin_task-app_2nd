@@ -1,5 +1,5 @@
 import uuid
-from datetime import date
+from datetime import date, datetime, timezone
 
 from pydantic import BaseModel, Field
 
@@ -26,6 +26,7 @@ class UpdateAndCreateTaskSchema(BaseModel):
 
 class TaskSchema(UpdateAndCreateTaskSchema):
     task_id: uuid.UUID = Field(...)
+    changed_time: datetime = Field(...)
 
 
 class ResponseSchema(BaseModel):

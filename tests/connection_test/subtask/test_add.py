@@ -3,9 +3,10 @@ import uuid
 import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+
 from main import app
 from models.subtasks import SubTask
-from sqlalchemy import select
 
 
 @pytest.mark.asyncio

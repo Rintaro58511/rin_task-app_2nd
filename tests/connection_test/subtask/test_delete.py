@@ -3,9 +3,10 @@ import uuid
 import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+
 from main import app
 from models.subtasks import SubTask
-from sqlalchemy import select
 
 
 @pytest.mark.asyncio
@@ -79,9 +80,7 @@ async def test_find_other_task(
     test_user, test_other_user, test_task, test_subtask, other_task = connection_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.delete(
-            f"/tasks/{other_task.task_id}/subtasks/{test_subtask.subtask_id}"
-        )
+        response = await ac.delete(f"/tasks/{other_task.task_id}/subtasks/{test_subtask.subtask_id}")
     assert response.status_code == status.HTTP_400_BAD_REQUEST, response.text
     assert response.json()["detail"] == "親タスクが異なります"
     result = await db_session.execute(select(SubTask).where(SubTask.subtask_name == "test_subtask"))

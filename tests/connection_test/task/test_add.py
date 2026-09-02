@@ -1,12 +1,13 @@
 from datetime import date
 
 import pytest
-from enums import TaskStatus
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import select
+
+from enums import TaskStatus
 from main import app
 from models.tasks import Task
-from sqlalchemy import select
 
 
 @pytest.mark.asyncio
