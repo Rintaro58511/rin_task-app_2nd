@@ -1,20 +1,6 @@
 const apiUrl = `${API_BASE_URL}/tasks`;
 let currentSort = localStorage.getItem('currentSort') || null;
 
-function getCreateAndUpdateTime(){
-    const now = new Date();
-
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const date = now.getDate().toString().padStart(2, '0');
-    const hours = now.getHours().toString().padStart(2, '0');
-    const minutes = now.getMinutes().toString().padStart(2, '0');
-    const seconds = now.getSeconds().toString().padStart(2, '0');
-
-    return `${year}-${month}-${date}T${hours}:${minutes}:${seconds}`
-
-}
-
 function getToken(){
     const token = localStorage.getItem('token');
 
@@ -204,7 +190,7 @@ function displayTasks(tasks){
                         <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
                         <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
                         <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
-                        <!-- <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6> -->
+                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
                     </div>
                 </div>
             </div>
@@ -301,7 +287,7 @@ async function updateTask(taskId){
 
                     <div class="mb-3">
                         <label for="updateTaskDetail" class="form-label">タスク詳細</label>
-                        <input type="text" class="updateTaskDetail form-control" value="${task.task_detail}" required>
+                        <input type="text" class="updateTaskDetail form-control" value="${task.task_detail}">
                     </div>
 
                     <div class="mb-3 updateTaskProgress">
