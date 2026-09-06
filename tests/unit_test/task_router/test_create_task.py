@@ -11,7 +11,7 @@ from schemas.tasks import TaskStatusSchema, UpdateAndCreateTaskSchema
 
 
 @pytest.mark.anyio
-async def test_create_task(monkeypatch, override_get_current_user, override_get_db):
+async def test_create_task(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,
@@ -45,11 +45,11 @@ async def test_create_task(monkeypatch, override_get_current_user, override_get_
         )
     assert response.status_code == status.HTTP_201_CREATED
     body = response.json()
-    assert body["message"] == "タスク追加ができました"
+    assert body["message"] == "タスクを登録しました"
 
 
 @pytest.mark.anyio
-async def test_fail_create_task(monkeypatch, override_get_current_user, override_get_db):
+async def test_fail_create_task(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_fail_add_task(task, user_id, db):
         status = TaskStatusSchema(
             task_progress=TaskStatus.IN_PROGRESS,

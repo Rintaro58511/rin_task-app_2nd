@@ -31,7 +31,75 @@ TEST_ASYNC_DB_URL = URL.create(
 
 
 @pytest_asyncio.fixture
+async def test_engine():
+    """結合テスト用のテストエンジンの設定"""
+
+    engine = create_async_engine(TEST_ASYNC_DB_URL)
+
+    yield engine
+
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def init_test_db(test_engine):
+    """テスト用データベースの初期化"""
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
+
+    yield
+
+    async with test_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+
+
+@pytest.fixture
+def override_get_mock_db():
+    """単体テスト用にDBセッションの依存関係をAsyncMockへ差し替える"""
+
+    async def override_db():
+        yield AsyncMock()
+
+    app.dependency_overrides[db.get_db_session] = override_db
+
+    yield
+
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def override_get_current_user():
+    """単体テスト用にユーザログインの依存関係をAsyncMockへ差し替える"""
+
+    async def override_user():
+        yield AsyncMock()
+
+    app.dependency_overrides[user.get_current_user] = override_user
+
+    yield
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def db_session(test_engine):
+    """テストコードからテストDBを直接操作するためのDBセッションを提供する"""
+
+    session_factory = async_sessionmaker(
+        test_engine,
+        expire_on_commit=False,
+    )
+
+    async with session_factory() as session:
+        yield session
+
+
+@pytest_asyncio.fixture
 async def override_get_test_db(test_engine):
+    """結合テスト用にDBセッションの依存関係をテストDBへ差し替える"""
+
     session_factory = async_sessionmaker(
         test_engine,
         expire_on_commit=False,
@@ -48,40 +116,38 @@ async def override_get_test_db(test_engine):
     app.dependency_overrides.clear()
 
 
-@pytest_asyncio.fixture
-async def test_engine():
-    engine = create_async_engine(TEST_ASYNC_DB_URL)
+@pytest.fixture
+def override_get_test_current_user(test_user):
+    """結合テスト用にユーザログインの依存関係をテストユーザーへ差し替える"""
 
-    yield engine
+    async def override_test_user():
+        yield test_user
 
-    await engine.dispose()
-
-
-@pytest_asyncio.fixture
-async def db_session(test_engine):
-    session_factory = async_sessionmaker(
-        test_engine,
-        expire_on_commit=False,
-    )
-
-    async with session_factory() as session:
-        yield session
-
-
-@pytest_asyncio.fixture
-async def init_test_db(test_engine):
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-        await conn.run_sync(Base.metadata.create_all)
+    app.dependency_overrides[user.get_current_user] = override_test_user
 
     yield
 
-    async with test_engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
+    app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def override_get_test_other_user(test_other_user):
+    """結合テスト用に別ユーザログインの依存関係を別のテストユーザーへ差し替える"""
+
+    async def override_test_user():
+        yield test_other_user
+
+    app.dependency_overrides[user.get_current_user] = override_test_user
+
+    yield
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def test_user():
+    """テスト用のユーザー情報"""
+
     expeted_user = User(
         user_id=uuid.uuid4(),
         user_name="test_user_a",
@@ -94,6 +160,8 @@ def test_user():
 
 @pytest.fixture
 def test_other_user():
+    """テスト用のユーザー情報。他のユーザータスクの取得などに使う"""
+
     expeted_user = User(
         user_id=uuid.uuid4(),
         user_name="test_user_b",
@@ -106,6 +174,8 @@ def test_other_user():
 
 @pytest.fixture
 def test_task(test_user):
+    """テスト用のタスク情報。正規のユーザーが所有する"""
+
     expeted_task = Task(
         task_id=uuid.uuid4(),
         user_id=test_user.user_id,
@@ -122,6 +192,8 @@ def test_task(test_user):
 
 @pytest.fixture
 def test_subtask(test_task):
+    """テスト用のサブタスク情報。正規のユーザー、タスクが所有する"""
+
     expected_subtask = SubTask(
         subtask_id=uuid.uuid4(),
         task_id=test_task.task_id,
@@ -132,42 +204,12 @@ def test_subtask(test_task):
     return expected_subtask
 
 
-@pytest.fixture
-def override_get_test_current_user(test_user):
-
-    async def override_test_user():
-        yield test_user
-
-    app.dependency_overrides[user.get_current_user] = override_test_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_test_other_user(test_other_user):
-
-    async def override_test_user():
-        yield test_other_user
-
-    app.dependency_overrides[user.get_current_user] = override_test_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
 @pytest_asyncio.fixture
 async def connection_test(
-    init_test_db,
-    db_session,
-    test_user,
-    test_other_user,
-    test_task,
-    test_subtask,
-    other_task
+    init_test_db, db_session, test_user, test_other_user, test_task, test_subtask, other_task
 ):
+    """結合テスト用にデータを用意"""
+
     db_session.add(test_user)
     db_session.add(test_other_user)
     db_session.add(test_task)
@@ -181,6 +223,8 @@ async def connection_test(
 
 @pytest.fixture
 def subtask():
+    """単体テスト用のサブタスクデータ"""
+
     expected_subtask = SubTask(
         subtask_id=uuid.uuid4(),
         task_id=uuid.uuid4(),
@@ -193,6 +237,8 @@ def subtask():
 
 @pytest.fixture
 def subtask_list():
+    """単体テスト用のサブタスクリストデータ"""
+
     subtask_id1 = uuid.uuid4()
     subtask_id2 = uuid.uuid4()
     task_id = uuid.uuid4()
@@ -217,6 +263,8 @@ def subtask_list():
 
 @pytest.fixture
 def subtask_schema():
+    """単体テストでのサブタスク追加更新用"""
+
     expeted_subtask_schema = UpdateAndCreateSubTaskSchema(
         subtask_name="test_subtask2",
         is_complete=True,
@@ -226,6 +274,8 @@ def subtask_schema():
 
 @pytest.fixture
 def task(subtask):
+    """サブタスクに紐づくタスク情報"""
+
     expeted_task = Task(
         task_id=subtask.task_id,
         user_id=uuid.uuid4(),
@@ -242,6 +292,8 @@ def task(subtask):
 
 @pytest.fixture
 def other_task(test_user):
+    """正規ユーザーが所有するサブタスクと紐づいていない他のタスク"""
+
     expeted_task = Task(
         task_id=uuid.uuid4(),
         user_id=test_user.user_id,
@@ -254,67 +306,3 @@ def other_task(test_user):
         progress_comment="少し進んだ",
     )
     return expeted_task
-
-
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_current_user():
-
-    async def override_user():
-        yield AsyncMock()
-
-    app.dependency_overrides[user.get_current_user] = override_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_current_task_user(task):
-
-    async def override_user():
-        yield User(
-            user_id=task.user_id,
-            user_name="test_user",
-            email="test@example.com",
-            hashed_password="test",
-            is_active=True,
-        )
-
-    app.dependency_overrides[user.get_current_user] = override_user
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def override_get_current_other_task_user(other_task):
-
-    async def override_user():
-        yield User(
-            user_id=other_task.user_id,
-            user_name="test_other_user",
-            email="other@example.com",
-            hashed_password="test",
-            is_active=True,
-        )
-
-    app.dependency_overrides[user.get_current_user] = override_user
-
-    yield
-
-    app.dependency_overrides.clear()

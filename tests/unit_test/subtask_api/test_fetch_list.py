@@ -7,7 +7,7 @@ from routers import subtasks
 
 
 @pytest.mark.anyio
-async def test_get_subtasks(monkeypatch, subtask_list, override_get_db, override_get_current_user):
+async def test_get_subtasks(monkeypatch, subtask_list, override_get_mock_db, override_get_current_user):
 
     async def mock_fetch_subtasks(task_id, user_id, db):
         return subtask_list

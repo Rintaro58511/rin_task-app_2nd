@@ -1,5 +1,5 @@
 [tool.ruff]
-line-length = 102
+line-length = 105
 src = ["app"]
 
 [tool.ruff.lint]

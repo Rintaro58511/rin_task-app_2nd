@@ -23,9 +23,7 @@ async def signup_user(
 ) -> ResponseSchema:
 
     new_user = await add_user(user, db_session)
-    dict_user = UserSchema(
-        user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email
-    )
+    dict_user = UserSchema(user_id=new_user.user_id, user_name=new_user.user_name, email=new_user.email)
     return ResponseSchema(message="ユーザーの登録ができました。", user=dict_user)
 
 

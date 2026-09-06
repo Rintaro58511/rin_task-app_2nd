@@ -88,9 +88,7 @@ async def test_fail_find_subtask(
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.put(
-            f"/tasks/{test_task.task_id}/subtasks/{none_subtask_id}", json=payload
-        )
+        response = await ac.put(f"/tasks/{test_task.task_id}/subtasks/{none_subtask_id}", json=payload)
     assert response.status_code == status.HTTP_404_NOT_FOUND, response.text
     assert response.json()["detail"] == "指定されたサブタスクが存在しません"
     result = await db_session.execute(select(SubTask).where(SubTask.subtask_name == "test_subtask"))

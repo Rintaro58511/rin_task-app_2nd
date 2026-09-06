@@ -1,31 +1,16 @@
 import uuid
-from unittest.mock import AsyncMock
 
 import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
-import db
 from main import app
 from models.user import User
 from routers import user
 
 
-@pytest.fixture
-def override_get_db():
-
-    async def override_db():
-        yield AsyncMock()
-
-    app.dependency_overrides[db.get_db_session] = override_db
-
-    yield
-
-    app.dependency_overrides.clear()
-
-
 @pytest.mark.anyio
-async def test_login_for_access_token(monkeypatch, override_get_db):
+async def test_login_for_access_token(monkeypatch, override_get_mock_db):
 
     async def mock_authenticate_user(username, password, db):
         return User(user_id=uuid.uuid4(), user_name="rintaro", email="test@test.com")
@@ -49,7 +34,7 @@ async def test_login_for_access_token(monkeypatch, override_get_db):
 
 
 @pytest.mark.anyio
-async def test_login_failure(monkeypatch, override_get_db):
+async def test_login_failure(monkeypatch, override_get_mock_db):
     async def mock_authenticate_user_fail(user, password, db):
         return None
 

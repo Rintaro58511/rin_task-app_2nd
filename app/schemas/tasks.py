@@ -18,9 +18,7 @@ class UpdateAndCreateTaskSchema(BaseModel):
     task_detail: str | None = Field(example="データの型の見直し")
     task_status: TaskStatusSchema = Field(
         ...,
-        example="task_progress: IN_PROGRESS,"
-        "progress_ratio: 50%,"
-        "progress_comment: Statusスキーマの変更",
+        example="task_progress: IN_PROGRESS,progress_ratio: 50%,progress_comment: Statusスキーマの変更",
     )
 
 

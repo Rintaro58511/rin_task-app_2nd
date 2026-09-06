@@ -12,7 +12,7 @@ from models.tasks import Task
 
 
 @pytest.mark.anyio
-async def test_get_row_tasks(monkeypatch, override_get_current_user, override_get_db):
+async def test_get_row_tasks(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_fetch_tasks(user_id, db):
         mock_tasks = [
             Task(
@@ -70,7 +70,7 @@ async def test_get_row_tasks(monkeypatch, override_get_current_user, override_ge
 
 
 @pytest.mark.anyio
-async def test_get_sorted_deadline_tasks(monkeypatch, override_get_current_user, override_get_db):
+async def test_get_sorted_deadline_tasks(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -128,7 +128,7 @@ async def test_get_sorted_deadline_tasks(monkeypatch, override_get_current_user,
 
 
 @pytest.mark.anyio
-async def test_get_sorted_status_tasks(monkeypatch, override_get_current_user, override_get_db):
+async def test_get_sorted_status_tasks(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_arrange_tasks(sort, user_id, db):
         mock_tasks = [
             Task(
@@ -186,7 +186,7 @@ async def test_get_sorted_status_tasks(monkeypatch, override_get_current_user, o
 
 
 @pytest.mark.anyio
-async def test_get_filtered_tasks(monkeypatch, override_get_current_user, override_get_db):
+async def test_get_filtered_tasks(monkeypatch, override_get_current_user, override_get_mock_db):
     async def mock_filter_tasks(search_name, user_id, db):
         mock_tasks = [
             Task(

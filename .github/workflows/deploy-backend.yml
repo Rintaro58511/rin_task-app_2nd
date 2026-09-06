@@ -92,7 +92,9 @@ jobs:
         run: ruff format --check .
 
       - name: Run pytests
-        run: pytest -v
+        run: |
+          pytest /usr/src/task_management/tests/unit_test
+          pytest /usr/src/task_management/tests/connection_test
     
       - name: Run migration upgrade test
         run: |

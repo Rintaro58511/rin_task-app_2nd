@@ -21,10 +21,7 @@ async def fetch_subtask(subtask_id: UUID, user_id: UUID, db_session: AsyncSessio
 
     """
     result = await db_session.execute(
-        select(SubTask)
-        .where(SubTask.subtask_id == subtask_id)
-        .join(Task)
-        .where(Task.user_id == user_id)
+        select(SubTask).where(SubTask.subtask_id == subtask_id).join(Task).where(Task.user_id == user_id)
     )
     target_subtask = result.scalars().first()
 

@@ -10,7 +10,7 @@ from schemas.subtasks import UpdateAndCreateSubTaskSchema
 
 @pytest.mark.asyncio
 async def test_create_subtask(
-    monkeypatch, task, subtask_schema, override_get_db, override_get_current_user
+    monkeypatch, task, subtask_schema, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -45,7 +45,7 @@ async def test_create_subtask(
 
 @pytest.mark.asyncio
 async def test_fail_create_subtask(
-    monkeypatch, task, subtask_schema, override_get_db, override_get_current_user
+    monkeypatch, task, subtask_schema, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_task(task_id, user_id, db):

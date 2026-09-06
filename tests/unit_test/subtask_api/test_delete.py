@@ -8,13 +8,8 @@ from routers import subtasks
 
 
 @pytest.mark.anyio
-async def test_update_subtask(
-    monkeypatch,
-    task,
-    subtask,
-    subtask_schema,
-    override_get_db,
-    override_get_current_user,
+async def test_delete_subtask(
+    monkeypatch, task, subtask, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -27,10 +22,10 @@ async def test_update_subtask(
 
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
-    async def mock_modify_subtask(target_subtask, db):
+    async def mock_remove_subtask(target_subtask, db):
         return None
 
-    monkeypatch.setattr(subtasks, "modify_subtask", mock_modify_subtask)
+    monkeypatch.setattr(subtasks, "remove_subtask", mock_remove_subtask)
 
     async def mock_calculate_ratio(task_id, user_id, db):
         return 50
@@ -43,23 +38,15 @@ async def test_update_subtask(
     monkeypatch.setattr(subtasks, "check_progress", mock_check_progress)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
-            json=subtask_schema.model_dump(),
-        )
+        response = await ac.delete(f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}")
     assert response.status_code == status.HTTP_200_OK
     body = response.json()
-    assert body["message"] == "サブタスクを更新しました"
+    assert body["message"] == "サブタスクを削除しました"
 
 
 @pytest.mark.anyio
-async def test_update_none_task(
-    monkeypatch,
-    subtask,
-    task,
-    subtask_schema,
-    override_get_db,
-    override_get_current_user,
+async def test_delete_none_task(
+    monkeypatch, subtask, task, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_none_task(task_id, user_id, db):
@@ -67,27 +54,16 @@ async def test_update_none_task(
 
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_none_task)
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as ac:
-        response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
-            json=subtask_schema.model_dump(),
-        )
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        response = await ac.delete(f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
     assert body["detail"] == "指定されたタスクが存在しません"
 
 
 @pytest.mark.anyio
-async def test_update_none_subtask(
-    monkeypatch,
-    subtask,
-    task,
-    subtask_schema,
-    override_get_db,
-    override_get_current_user,
+async def test_delete_none_subtask(
+    monkeypatch, subtask, task, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -101,24 +77,15 @@ async def test_update_none_subtask(
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.put(
-            f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}",
-            json=subtask_schema.model_dump(),
-        )
+        response = await ac.delete(f"/tasks/{task.task_id}/subtasks/{subtask.subtask_id}")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     body = response.json()
     assert body["detail"] == "指定されたサブタスクが存在しません"
 
 
 @pytest.mark.anyio
-async def test_update_other_task(
-    monkeypatch,
-    subtask,
-    task,
-    other_task,
-    subtask_schema,
-    override_get_db,
-    override_get_current_user,
+async def test_delete_other_task(
+    monkeypatch, subtask, task, other_task, override_get_mock_db, override_get_current_user
 ):
 
     async def mock_fetch_task(task_id, user_id, db):
@@ -132,10 +99,7 @@ async def test_update_other_task(
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_subtask)
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
-        response = await ac.put(
-            f"/tasks/{other_task.task_id}/subtasks/{subtask.subtask_id}",
-            json=subtask_schema.model_dump(),
-        )
+        response = await ac.delete(f"/tasks/{other_task.task_id}/subtasks/{subtask.subtask_id}")
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     body = response.json()
     assert body["detail"] == "親タスクが異なります"

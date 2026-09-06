@@ -65,9 +65,7 @@ async def test_update_none_task(subtask_schema, subtask, monkeypatch):
     monkeypatch.setattr(subtasks, "fetch_task", mock_fetch_none_task)
 
     with pytest.raises(HTTPException) as exc_info:
-        await update_subtask(
-            subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db
-        )
+        await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db)
 
     assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたタスクが存在しません"
@@ -90,9 +88,7 @@ async def test_update_none_subtask(subtask_schema, task, subtask, monkeypatch):
     monkeypatch.setattr(subtasks, "fetch_subtask", mock_fetch_none_subtask)
 
     with pytest.raises(HTTPException) as exc_info:
-        await update_subtask(
-            subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db
-        )
+        await update_subtask(subtask_schema, subtask.subtask_id, subtask.task_id, current_user, mock_db)
 
     assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
     assert exc_info.value.detail == "指定されたサブタスクが存在しません"
