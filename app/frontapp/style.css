@@ -12,7 +12,18 @@
     height: 25rem;
 }
 .task-card .card-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+.task-main {
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
+}
+.task-footer {
+    flex-shrink: 0;
 }
 .task-card .update {
     border-color: yellow;

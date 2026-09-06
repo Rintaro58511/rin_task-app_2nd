@@ -38,7 +38,7 @@ const createTaskForm = document.getElementById("createTaskForm");
 addButton.addEventListener("click", function(){
 
     createTaskForm.innerHTML = `
-        <div class="card mb-3" style="width: 20rem; border-color: green;">
+        <div class="card mb-3 task-card" border-color: green;">
             <div class="card-body">
                 <div class="mb-3">
                     <label for="taskName" class="form-label">タスク名</label>
@@ -178,19 +178,41 @@ function displayTasks(tasks){
             <div class="col" id="task-card-${task.task_id}">
                 <div class="card mb-3 task-card">
                     <div class="card-body">
-                        <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%" data-task-bar="${task.task_id}"></div>
+
+                        <div class="task-main">
+                            <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuemin="0" aria-valuemax="100">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: ${task.task_status.progress_ratio}%" data-task-bar="${task.task_id}"></div>
+                            </div>
+                            <div class="task-content">
+                                <h5 class="card-title mt-2">${task.task_name}</h5>
+                                <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
+                                <h6 class="card-subtitle mb-2 text-body-secondary" data-task-status="${task.task_id}">状態: ${task.task_status.task_progress}</h6>
+                                <p class="card-text">${task.task_detail}</p>
+                            </div>
+                            <div id="subTaskList-${task.task_id}"></div>
                         </div>
-                        <h5 class="card-title mt-2">${task.task_name}</h5>
-                        <h6 class="card-subtitle mb-2 text-body-secondary">締切: ${task.task_deadline}</h6>
-                        <h6 class="card-subtitle mb-2 text-body-secondary" data-task-status="${task.task_id}">状態: ${task.task_status.task_progress}</h6>
-                        <p class="card-text">${task.task_detail}</p>
-                        <div id="subTaskList-${task.task_id}"></div>
-                        <button type="button" class="btn btn-success w-100 mt-2 addSubTaskButton" data-id="${task.task_id}">サブタスクの追加</button>
-                        <button type="button" class="btn btn-warning w-100 mt-2 updateButton" data-id="${task.task_id}">変更</button>
-                        <button type="button" class="btn btn-danger w-100 mt-2 deleteButton" data-id="${task.task_id}">削除</button>
-                        <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
-                        <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
+                        
+                        <div class="task-footer">
+                            <button type="button"
+                                class="btn btn-success w-100 mt-2 addSubTaskButton subtask-add-btn"
+                                data-id="${task.task_id}">
+                                サブタスクの追加
+                            </button>
+
+                            <button type="button"
+                                class="btn btn-warning w-100 mt-2 updateButton"
+                                data-id="${task.task_id}">
+                                変更
+                            </button>
+
+                            <button type="button"
+                                class="btn btn-danger w-100 mt-2 deleteButton"
+                                data-id="${task.task_id}">
+                                削除
+                            </button>
+                            <h6 class="card-subtitle mt-2 text-body-secondary">変更点：${task.task_status.progress_comment}</h6>
+                            <h6 class="card-subtitle mt-2 text-body-secondary">変更時間：${formattedTime}</h6>
+                        </div>
                     </div>
                 </div>
             </div>
