@@ -184,7 +184,7 @@ jobs:
             [
               {
                 "name": "${{ env.CONTAINER_NAME }}",
-                "command": ["alembic", "upgrade", "head"]
+                "command": ["alembic", "-c", "app/alembic.ini", "upgrade", "head"]
               }
             ]
 
