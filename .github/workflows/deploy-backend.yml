@@ -93,8 +93,8 @@ jobs:
 
       - name: Run pytests
         run: |
-          pytest /usr/src/task_management/tests/unit_test
-          pytest /usr/src/task_management/tests/connection_test
+          pytest /tests/unit_test
+          pytest /tests/connection_test
     
       - name: Run migration upgrade test
         run: |
