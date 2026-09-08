@@ -11,12 +11,12 @@ from models.subtasks import SubTask
 
 @pytest.mark.asyncio
 async def test_update_subtask(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "subtask_name": "integration_test_subtask",
@@ -45,12 +45,12 @@ async def test_update_subtask(
 
 @pytest.mark.asyncio
 async def test_fail_find_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     none_task_id = uuid.uuid4()
 
@@ -73,12 +73,12 @@ async def test_fail_find_task(
 
 @pytest.mark.asyncio
 async def test_fail_find_subtask(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     none_subtask_id = uuid.uuid4()
 
@@ -99,12 +99,12 @@ async def test_fail_find_subtask(
 
 @pytest.mark.asyncio
 async def test_find_other_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "subtask_name": "integration_test_subtask",

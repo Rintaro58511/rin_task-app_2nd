@@ -9,16 +9,22 @@ from enums import TaskStatus
 class TaskStatusSchema(BaseModel):
     task_progress: TaskStatus = Field(default=TaskStatus.TODO)
     progress_ratio: int = Field(default=0)
-    progress_comment: str | None = Field(max_length=30, example="Statusスキーマの変更")
+    progress_comment: str | None = Field(
+        max_length=30, json_schema_extra={"example": "Statusスキーマの変更"}
+    )
 
 
 class UpdateAndCreateTaskSchema(BaseModel):
-    task_name: str = Field(..., example="スキーマのコーディング")
-    task_deadline: date = Field(..., example="2026-06-30")
-    task_detail: str | None = Field(example="データの型の見直し")
+    task_name: str = Field(..., json_schema_extra={"example": "スキーマのコーディング"})
+    task_deadline: date = Field(..., json_schema_extra={"example": "2026-06-30"})
+    task_detail: str | None = Field(json_schema_extra={"example": "データの型の見直し"})
     task_status: TaskStatusSchema = Field(
         ...,
-        example="task_progress: IN_PROGRESS,progress_ratio: 50%,progress_comment: Statusスキーマの変更",
+        json_schema_extra={
+            "example": "task_progress: IN_PROGRESS,"
+            "progress_ratio: 50%,"
+            "progress_comment: Statusスキーマの変更"
+        },
     )
 
 

@@ -11,12 +11,12 @@ from main import app
 
 @pytest.mark.asyncio
 async def test_get_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(f"/tasks/{test_task.task_id}")
@@ -34,12 +34,12 @@ async def test_get_task(
 
 @pytest.mark.asyncio
 async def test_get_task_with_etag(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         first_response = await ac.get(f"/tasks/{test_task.task_id}")
@@ -57,12 +57,12 @@ async def test_get_task_with_etag(
 
 @pytest.mark.asyncio
 async def test_get_task_with_old_etag(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         old_etag = f'"{int(test_task.changed_time.timestamp()) - 1}"'
@@ -75,12 +75,12 @@ async def test_get_task_with_old_etag(
 
 @pytest.mark.asyncio
 async def test_get_none_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     none_task_id = uuid.uuid4()
 

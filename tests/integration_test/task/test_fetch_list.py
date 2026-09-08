@@ -7,12 +7,12 @@ from main import app
 
 @pytest.mark.asyncio
 async def test_fetch_task_list(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get("/tasks")
@@ -27,12 +27,12 @@ async def test_fetch_task_list(
 
 @pytest.mark.asyncio
 async def test_arrange_task_deadline(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(
@@ -50,12 +50,12 @@ async def test_arrange_task_deadline(
 
 @pytest.mark.asyncio
 async def test_arrange_task_status(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         response = await ac.get(

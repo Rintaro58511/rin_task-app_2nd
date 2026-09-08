@@ -30,8 +30,8 @@ SecretEmailField = Annotated[
 
 class UserSchema(BaseModel):
     user_id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    user_name: str = Field(..., example="佐藤 太郎")
-    email: SecretEmailField = Field(..., example="example@gmail.com")
+    user_name: str = Field(..., json_schema_extra={"example": "佐藤 太郎"})
+    email: SecretEmailField = Field(..., json_schema_extra={"example": "example@gmail.com"})
 
 
 class UserInDB(UserSchema):

@@ -82,9 +82,8 @@ async def remove_task(target_task: Task, db_session: AsyncSession) -> None:
 
     """
 
-    if target_task:
-        await db_session.delete(target_task)
-        await db_session.commit()
+    await db_session.delete(target_task)
+    await db_session.commit()
 
 
 async def modify_task(

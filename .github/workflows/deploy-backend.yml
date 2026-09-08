@@ -94,7 +94,7 @@ jobs:
       - name: Run pytests
         run: |
           pytest tests/unit_test
-          pytest tests/connection_test
+          pytest tests/integration_test
     
       - name: Run migration upgrade test
         run: |

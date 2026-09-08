@@ -12,12 +12,12 @@ from models.tasks import Task
 
 @pytest.mark.asyncio
 async def test_update_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -45,12 +45,12 @@ async def test_update_task(
 
 @pytest.mark.asyncio
 async def test_update_past_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -78,12 +78,12 @@ async def test_update_past_task(
 
 @pytest.mark.asyncio
 async def test_fetch_none_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -112,12 +112,12 @@ async def test_fetch_none_task(
 
 @pytest.mark.asyncio
 async def test_fetch_other_user_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_other_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -145,12 +145,12 @@ async def test_fetch_other_user_task(
 
 @pytest.mark.asyncio
 async def test_update_task_with_etag(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
