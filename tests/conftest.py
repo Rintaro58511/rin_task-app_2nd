@@ -205,7 +205,7 @@ def test_subtask(test_task):
 
 
 @pytest_asyncio.fixture
-async def connection_test(
+async def integration_test(
     init_test_db, db_session, test_user, test_other_user, test_task, test_subtask, other_task
 ):
     """結合テスト用にデータを用意"""

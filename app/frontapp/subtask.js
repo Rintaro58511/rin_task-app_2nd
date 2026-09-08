@@ -1,99 +1,44 @@
 const taskList = document.getElementById("taskList");
 const createSubTaskForm = document.getElementById("createSubTaskForm");
 
-taskList.addEventListener("click", function (event) {
-    if (!event.target.classList.contains("addSubTaskButton")){
-        return;
-    }
-
-    selectedTaskId = event.target.dataset.id;
-
-    createSubTaskForm.innerHTML = `
-        <div class="card mb-3" style="width: 20rem; border-color: green;">
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="subTaskName" class="form-label">
-                        サブタスク名
-                    </label>
-
-                    <input
-                        type="text"
-                        id="subTaskName"
-                        class="form-control"
-                        placeholder="サブタスク名を入力"
-                        required
-                    >
-                </div>
-
-                <button type="submit" class="btn btn-success w-100 mt-2">
-                    登録完了
-                </button>
-
-                <button
-                    type="button"
-                    class="btn btn-secondary w-100 mt-1"
-                    id="cancelSubTaskButton"
-                >
-                    キャンセル
-                </button>
-            </div>
-        </div>
-    `;
-});
-
-
-createSubTaskForm.addEventListener("submit", async function (event){
-    event.preventDefault();
-
-    const subTaskData = {
-        subtask_name: document.getElementById("subTaskName").value,
-        is_complete: false,
-    };
-
-    await addSubTask(subTaskData);
-});
-
-
-createSubTaskForm.addEventListener("click", function (event){
-    if (!event.target.matches("#cancelSubTaskButton")) {
-        return;
-    }
-
-    createSubTaskForm.innerHTML = "";
-    selectedTaskId = null;
-});
-
-
-async function addSubTask(subTask){
+async function addSubTask(taskId, subTaskName){
     
     const token = getToken();
+
+    const subTaskData = {
+        subtask_name: subTaskName,
+        is_complete: false,
+    };
 
     try {
         const response = await send_request({
             method: "POST",
             token: token,
-            url: `${apiUrl}/${selectedTaskId}/subtask`,
-            body: subTask,
+            url: `${apiUrl}/${taskId}/subtask`,
+            body: subTaskData,
         });
 
-        const data = await response.json();
-
         if (response.ok) {
-            alert(data.message || "サブタスクの追加が完了しました");
+            await fetchAndDisplaySubTasks(taskId);
+            await refreshTask(taskId);
 
-            createSubTaskForm.innerHTML = "";
-            selectedTaskId = null;
-
-            await fetchAndDisplayTasks();
+            return true;
         }else if(response.status === 401) {
             alert("認証エラーが発生しました。再度ログインしてください。");
             localStorage.removeItem('token');
             window.location.href = "./login.html";
+
+            return false;
         } else {
-            alert(data.detail || "サブタスクの追加に失敗しました");
+            const err = await response.json();
+            alert(err.detail || "サブタスクの追加に失敗しました");
+
+            return false;
         }
     } catch (error) {
         console.error("サブタスク追加中にエラーが発生しました", error);
+
+        return false;
     }
 }
 
@@ -140,7 +85,7 @@ async function updateSubTask(taskId, subTaskId, subTaskName, isComplete){
             window.location.href = "./login.html";
         } else {
             const err = await response.json();
-            alert(err.detail || "タスクの更新に失敗しました");
+            alert(err.detail || "サブタスクの更新に失敗しました");
         }
     } catch (error) {
         console.error('タスク更新中にエラーが発生しました', error);
@@ -149,9 +94,12 @@ async function updateSubTask(taskId, subTaskId, subTaskName, isComplete){
 
 document.getElementById("taskList").addEventListener("click", async function(event){
 
-    if(!event.target.classList.contains("deleteSubTaskButton") && !event.target.classList.contains("updateSubTaskButton") && !event.target.classList.contains("updateCompleteButton") && !event.target.classList.contains("cancelSubTaskButton")){
-        return;
-    }
+    console.log(
+        "CLICK:",
+        event.target.className,
+        event.target.dataset.taskId,
+        event.target.dataset.id
+    );
 
     const subTaskId = event.target.dataset.id;
     const taskId = event.target.dataset.taskId;
@@ -161,46 +109,126 @@ document.getElementById("taskList").addEventListener("click", async function(eve
     }
 
     if(event.target.classList.contains("updateSubTaskButton")){
-        const labelToInput = document.querySelector(`[data-subtask-name="${subTaskId}"]`)
+        const labelToInput =
+            document.querySelector(`[data-subtask-name="${subTaskId}"]`);
+
         labelToInput.innerHTML = `
-        <input
-            type="text"
-            id="subTaskName-${subTaskId}"
-            class="form-control form-control-sm"
-            placeholder="サブタスク名を入力"
-            required
-        >
-            <div class="d-flex gap-2">
-                <button
-                    type="button"
-                    class="btn btn-warning w-100 mt-1 subtask-action-btn updateCompleteButton"
-                    data-id = "${subTaskId}"
-                    data-task-id = "${taskId}"
+            <form
+                class="updateSubTaskForm"
+                data-task-id="${taskId}"
+                data-subtask-id="${subTaskId}"
+            >
+                <input
+                    type="text"
+                    id="subTaskName-${subTaskId}"
+                    class="form-control form-control-sm"
+                    placeholder="サブタスク名を入力"
+                    required
                 >
-                    登録完了
-                </button>
 
-                <button
-                    type="button"
-                    class="btn btn-secondary w-100 mt-1 subtask-action-btn cancelSubTaskButton"
-                    data-task-id = "${taskId}"
-                >
-                    キャンセル
-                </button>
-            </div>`
+                <div class="d-flex gap-2">
+                    <button
+                        type="submit"
+                        class="btn btn-warning w-100 mt-1 subtask-action-btn"
+                    >
+                        登録完了
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary w-100 mt-1 subtask-action-btn cancelUpdateSubTaskButton"
+                        data-task-id="${taskId}"
+                    >
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        `;
     }
 
-    if(event.target.classList.contains("updateCompleteButton")){
+    if (event.target.classList.contains("addSubTaskButton")){
+        const addArea = document.getElementById(`subTaskAdd-${taskId}`);
 
-        const changingSubtaskName = document.getElementById(`subTaskName-${subTaskId}`).value;
-        const changingIsComplete = document.getElementById(`isComplete-${subTaskId}`).checked;
+        addArea.innerHTML = `
+            <form class="addSubTaskForm" data-task-id="${taskId}">
+                <input
+                    type="text"
+                    id="newSubTaskName-${taskId}"
+                    class="form-control form-control-sm subtask-add-input"
+                    placeholder="サブタスク名を入力"
+                    required
+                >
 
-        await updateSubTask(taskId, subTaskId, changingSubtaskName, changingIsComplete);
+                <div class="d-flex gap-2">
+                    <button
+                        type="submit"
+                        class="btn btn-success w-100 mt-1 subtask-action-btn"
+                    >
+                        登録完了
+                    </button>
+
+                    <button
+                        type="button"
+                        class="btn btn-secondary w-100 mt-1 subtask-action-btn cancelAddSubTaskButton"
+                        data-task-id="${taskId}"
+                    >
+                        キャンセル
+                    </button>
+                </div>
+            </form>
+        `;
     }
-
-    if(event.target.classList.contains("cancelSubTaskButton")){
-
+    if (event.target.classList.contains("cancelUpdateSubTaskButton")) {
         await fetchAndDisplaySubTasks(taskId);
+        return;
+    }
+
+    if (event.target.classList.contains("cancelAddSubTaskButton")) {
+        document.getElementById(`subTaskAdd-${taskId}`).innerHTML = "";
+        return;
+    }
+});
+
+document.getElementById("taskList").addEventListener("submit", async function(event) {
+
+    if (
+        !event.target.classList.contains("addSubTaskForm") &&
+        !event.target.classList.contains("updateSubTaskForm")
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+
+    if (event.target.classList.contains("addSubTaskForm")) {
+        const taskId = event.target.dataset.taskId;
+
+        const addingSubtaskName =
+            document.getElementById(`newSubTaskName-${taskId}`).value;
+        
+        const success = await addSubTask(taskId, addingSubtaskName);
+
+        if (success) {
+            document.getElementById(`subTaskAdd-${taskId}`).innerHTML = "";
+        }
+    }
+
+    if (event.target.classList.contains("updateSubTaskForm")) {
+        const taskId = event.target.dataset.taskId;
+        const subTaskId = event.target.dataset.subtaskId;
+
+        const changingSubtaskName =
+            document.getElementById(`subTaskName-${subTaskId}`).value;
+
+        const changingIsComplete =
+            document.getElementById(`isComplete-${subTaskId}`).checked;
+
+        await updateSubTask(
+            taskId,
+            subTaskId,
+            changingSubtaskName,
+            changingIsComplete
+        );
     }
 });
 

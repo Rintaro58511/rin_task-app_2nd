@@ -12,12 +12,12 @@ from models.tasks import Task
 
 @pytest.mark.asyncio
 async def test_add_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -36,11 +36,11 @@ async def test_add_task(
     assert response.json()["message"] == "タスクを登録しました"
     result = await db_session.execute(
         select(Task).where(
-            Task.task_name == "integration_test_task"
-            and Task.task_deadline == date(2026, 10, 10)
-            and Task.task_detail == test_task
-            and Task.task_status == TaskStatus.TODO
-            and Task.user_id == test_user.user_id
+            Task.task_name == "integration_test_task",
+            Task.task_deadline == date(2026, 10, 10),
+            Task.task_detail == "test_task",
+            Task.task_progress == TaskStatus.TODO,
+            Task.user_id == test_user.user_id,
         )
     )
     created_task = result.scalar_one_or_none()
@@ -50,12 +50,12 @@ async def test_add_task(
 
 @pytest.mark.asyncio
 async def test_add_expired_task(
-    connection_test,
+    integration_test,
     db_session,
     override_get_test_db,
     override_get_test_current_user,
 ):
-    test_user, test_other_user, test_task, test_subtask, other_task = connection_test
+    test_user, test_other_user, test_task, test_subtask, other_task = integration_test
 
     payload = {
         "task_name": "integration_test_task",
@@ -74,11 +74,11 @@ async def test_add_expired_task(
     assert response.json()["detail"] == "期限が過去の日付になっています"
     result = await db_session.execute(
         select(Task).where(
-            Task.task_name == "integration_test_task"
-            and Task.task_deadline == date(2026, 8, 10)
-            and Task.task_detail == test_task
-            and Task.task_status == TaskStatus.TODO
-            and Task.user_id == test_user.user_id
+            Task.task_name == "integration_test_task",
+            Task.task_deadline == date(2026, 8, 10),
+            Task.task_detail == "test_task",
+            Task.task_progress == TaskStatus.TODO,
+            Task.user_id == test_user.user_id,
         )
     )
     created_task = result.scalar_one_or_none()
