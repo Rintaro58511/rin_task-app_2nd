@@ -75,6 +75,7 @@ async def test_authenticate_user(monkeypatch):
     assert returned_user.user_name == "rintaro"
     assert returned_user.email == "test@test.com"
 
+
 @pytest.mark.anyio
 async def test_fail_authenticate_user_email(monkeypatch):
     mock_db = AsyncMock()
@@ -87,6 +88,7 @@ async def test_fail_authenticate_user_email(monkeypatch):
     returned_user = await authenticate_user("test@test.com", "test_password", mock_db)
 
     assert returned_user is None
+
 
 @pytest.mark.anyio
 async def test_authenticate_user_pass(monkeypatch):

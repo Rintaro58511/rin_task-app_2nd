@@ -47,7 +47,8 @@ async def test_get_task_with_etag(
         etag = first_response.headers["ETag"]
 
         second_response = await ac.get(
-            f"/tasks/{test_task.task_id}", headers={"If-None-Match": etag},
+            f"/tasks/{test_task.task_id}",
+            headers={"If-None-Match": etag},
         )
 
     assert first_response.status_code == status.HTTP_200_OK

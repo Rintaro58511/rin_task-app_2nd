@@ -7,9 +7,7 @@ from routers import tasks
 
 
 @pytest.mark.anyio
-async def test_delete_task(
-    monkeypatch, task, override_get_current_user, override_get_mock_db
-    ):
+async def test_delete_task(monkeypatch, task, override_get_current_user, override_get_mock_db):
 
     async def mock_fetch_task(task_id, user_id, db):
         return task
@@ -27,9 +25,7 @@ async def test_delete_task(
 
 
 @pytest.mark.anyio
-async def test_delete_none_task(
-    monkeypatch, task, override_get_current_user, override_get_mock_db
-    ):
+async def test_delete_none_task(monkeypatch, task, override_get_current_user, override_get_mock_db):
 
     async def mock_fetch_task(task_id, user_id, db):
         return None
