@@ -13,6 +13,7 @@ pyjwt
 python-multipart
 pytest
 pytest-asyncio
+pytest-cov
 email-validator
 pydantic_settings
 alembic

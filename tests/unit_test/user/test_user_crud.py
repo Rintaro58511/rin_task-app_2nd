@@ -74,3 +74,37 @@ async def test_authenticate_user(monkeypatch):
     assert returned_user is not None
     assert returned_user.user_name == "rintaro"
     assert returned_user.email == "test@test.com"
+
+@pytest.mark.anyio
+async def test_fail_authenticate_user_email(monkeypatch):
+    mock_db = AsyncMock()
+
+    async def mock_fetch_user_by_email(email, mock_db):
+        return None
+
+    monkeypatch.setattr(user, "fetch_user_by_email", mock_fetch_user_by_email)
+
+    returned_user = await authenticate_user("test@test.com", "test_password", mock_db)
+
+    assert returned_user is None
+
+@pytest.mark.anyio
+async def test_authenticate_user_pass(monkeypatch):
+    mock_db = AsyncMock()
+
+    mock_user = User(
+        user_id=uuid.uuid4(),
+        user_name="rintaro",
+        email="test@test.com",
+        hashed_password="hashed_test_password",  # 必要に応じて追加
+    )
+
+    async def mock_fetch_user_by_email(email, mock_db):
+        return mock_user
+
+    monkeypatch.setattr(user, "fetch_user_by_email", mock_fetch_user_by_email)
+    monkeypatch.setattr("cruds.user.password_hash.verify", lambda p, h: None)
+
+    returned_user = await authenticate_user("test@test.com", "test_password", mock_db)
+
+    assert returned_user is None

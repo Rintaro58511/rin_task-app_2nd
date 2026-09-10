@@ -26,6 +26,30 @@ async def test_search_task(
 
     assert body["task_name"] == other_task.task_name
 
+@pytest.mark.anyio
+async def test_search_task(
+    monkeypatch,
+    other_task,
+    override_get_current_user,
+    override_get_mock_db,
+):
+    async def mock_fetch_task(task_id, user_id, db):
+        return other_task
+
+    monkeypatch.setattr(tasks, "fetch_task", mock_fetch_task)
+
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        first_response = await ac.get(f"/tasks/{other_task.task_id}")
+
+        etag = first_response.headers["ETag"]
+
+        second_response = await ac.get(
+            f"/tasks/{other_task.task_id}",
+            headers={"If-None-Match": etag},
+        )
+
+    assert first_response.status_code == status.HTTP_200_OK
+    assert second_response.status_code == status.HTTP_304_NOT_MODIFIED
 
 @pytest.mark.anyio
 async def test_fail_fetch_task(

@@ -50,7 +50,7 @@ async def search_task(
     if_none_match: str | None = Header(None),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(db.get_db_session),
-) -> TaskSchema:
+) -> TaskSchema | Response:
     """指定されたIDのタスク詳細を取得する"""
 
     task = await fetch_task(task_id, current_user.user_id, db_session)
@@ -126,6 +126,7 @@ async def get_tasks(
 async def update_task(
     task_id: UUID,
     task: UpdateAndCreateTaskSchema,
+    response: Response,
     if_match: str | None = Header(None),
     current_user=Depends(get_current_user),
     db_session: AsyncSession = Depends(db.get_db_session),
@@ -134,20 +135,22 @@ async def update_task(
 
     target_task = await fetch_task(task_id, current_user.user_id, db_session)
 
-    if task.task_deadline < date.today():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="期限が過去の日付になっています",
-        )
     if target_task is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが存在しません",
         )
+    
     if target_task.user_id != current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません"
         )
+    
+    if task.task_deadline < date.today():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="期限が過去の日付になっています",
+            )
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
 
@@ -158,6 +161,9 @@ async def update_task(
         )
 
     await modify_task(task, target_task, db_session)
+
+    new_etag = f'"{int(target_task.changed_time.timestamp())}"'
+    response.headers["ETag"] = new_etag
 
     return ResponseSchema(message="タスクを更新しました")
 
