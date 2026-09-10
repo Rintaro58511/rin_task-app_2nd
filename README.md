@@ -314,7 +314,7 @@ Task更新後の ETag の変更や、古い ETag を利用した更新が
 Docker の multi-stage build
 を利用し、開発環境と本番環境で必要な内容を分離しています。
 
-### 6. CI/CD
+### 6. Index設計とクエリ性能検証
 
 100,000件のTaskデータを用いて EXPLAIN ANALYZE で検証した結果、
 user_id のIndexによって対象クエリの実行時間が約4.76msから約0.50msへ短縮されました。
