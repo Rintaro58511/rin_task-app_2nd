@@ -140,17 +140,17 @@ async def update_task(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="指定されたタスクが存在しません",
         )
-    
+
     if target_task.user_id != current_user.user_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="指定されたタスクが存在しません"
         )
-    
+
     if task.task_deadline < date.today():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="期限が過去の日付になっています",
-            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="期限が過去の日付になっています",
+        )
 
     current_etag = f'"{int(target_task.changed_time.timestamp())}"'
 
