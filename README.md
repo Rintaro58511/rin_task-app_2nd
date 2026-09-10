@@ -21,7 +21,7 @@ FastAPI / PostgreSQL を中心に構築した、ユーザー認証付きのタ�
 -   期限・ステータスによるソート
 -   サブタスクの作成・更新・削除
 -   他ユーザーのタスクへのアクセス制御
--   Pytest による API / CRUD の自動テスト
+-   Pytest による Unit / Connection Test + Coverage の自動テスト
 -   GitHub Actions によるバックエンド・フロントエンドの自動デプロイ
 
 ------------------------------------------------------------------------
@@ -36,7 +36,7 @@ FastAPI / PostgreSQL を中心に構築した、ユーザー認証付きのタ�
   Database / Migration     PostgreSQL / Alembic
   Authentication       OAuth2 / JWT
   Frontend             HTML / CSS / JavaScript (Fetch API)
-  Test                 Pytest / HTTPX
+  Test                 Pytest / pytest-anyio / HTTPX / pytest-cov
   Container            Docker / Docker Compose
   Cloud                AWS CloudFront / S3 / ALB / ECS Fargate / ECR / RDS
   CI/CD                GitHub Actions
@@ -161,6 +161,7 @@ Deploy Complete
 -   ユーザー ID に基づくタスク所有者チェック
 -   他ユーザーのタスクへのアクセス制御
 -   CORS の許可 Origin を環境ごとに管理
+-   ETag / If-Matchによる楽観的排他制御
 -   RDS の PostgreSQL ポートをインターネットへ直接公開せず、ECS の
     Security Group からの通信に制限
 -   GitHub Actions → AWS の認証に OIDC を使用
@@ -170,19 +171,43 @@ Deploy Complete
 
 ## Testing
 
-Pytest を利用し、CRUD ロジックと FastAPI の API
-エンドポイントをテストしています。
+Pytest / pytest-anyio / HTTPX を利用し、単体テストと結合テストを実装しています。
 
-主なテスト対象は、ユーザー登録、ログイン / JWT
-発行、ユーザー情報取得、タスク
-CRUD、検索、認証・所有者チェック、サブタスク関連処理です。
+### Unit Test
 
-API テストでは HTTPX の `AsyncClient` / `ASGITransport`
-を利用し、FastAPI の Dependency Override や Mock
-を使って依存関係を切り替えています。
+Router・Service・CRUD 層を対象に、FastAPI の Dependency Override や
+Mock / monkeypatch を利用して依存関係を分離し、各処理の分岐を検証しています。
 
-GitHub Actions でもテスト用 PostgreSQL を起動して Pytest
-を実行し、テストが失敗した場合は本番デプロイへ進まないようにしています。
+主に以下をテストしています。
+
+- ユーザー登録・ログイン・JWT認証
+- Task / SubTask の CRUD
+- 入力値のバリデーション
+- 存在しないリソースへのアクセス
+- 他ユーザーが所有するリソースへのアクセス制御
+- ETag / If-Match の検証
+
+### Connection Test
+
+テスト用 PostgreSQL に接続し、実際の DB アクセスを含めた API の動作を検証しています。
+
+単体テストでは確認できない以下のような処理を対象としています。
+
+- Task / SubTask の CRUD と DB への反映
+- ユーザーごとのリソースアクセス制御
+- ETag / If-Match を利用した楽観的排他制御
+- DB 更新後のデータ整合性
+
+### Coverage
+
+pytest-cov を利用して Branch Coverage を含むカバレッジを計測しています。
+
+- Test Coverage: 99%
+- Branch Coverage を有効化
+- CI では Coverage が 95% 未満の場合にテストを失敗させるよう設定
+
+GitHub Actions 上でもテスト用 PostgreSQL を起動してテストを実行し、
+テストまたは Coverage の品質基準を満たさない場合は、本番デプロイへ進まない構成にしています。
 
 ------------------------------------------------------------------------
 
@@ -251,74 +276,50 @@ FastAPI と SQLAlchemy の `AsyncSession` を利用し、DB I/O
 API エンドポイント、DB 操作、入力・出力スキーマ、DB
 モデルを分離し、変更箇所の影響範囲を抑えられる構成を意識しています。
 
-### 3. 認証だけでなく認可も実装
+### 3. ETag を利用したキャッシュ検証と楽観的排他制御
+
+Task の `changed_time` をもとに ETag を生成し、
+データ取得時のキャッシュ検証と更新時の競合検知に利用しています。
+
+#### GET: If-None-Match による変更検知
+
+Task取得時に ETag をレスポンスヘッダーとして返します。
+
+クライアントから送信された `If-None-Match` と現在の ETag が一致する場合は、
+Taskが更新されていないと判断し、`304 Not Modified` を返します。
+
+Taskが更新され `changed_time` が変更されている場合は新しい ETag とともに
+最新のTaskデータを返します。
+
+#### PUT: If-Match による楽観的排他制御
+
+複数のリクエストによる Lost Update を防ぐため、
+更新時には `If-Match` と現在の ETag を比較します。
+
+一致する場合のみ更新を許可し、一致しない場合は
+`412 Precondition Failed` を返して最新データの再取得を要求します。
+
+これらの動作については PostgreSQL を利用した結合テストを実装し、
+Task更新後の ETag の変更や、古い ETag を利用した更新が
+拒否されることを確認しています。
+
+
+### 4. 認証だけでなく認可も実装
 
 ログインできるかだけでなく、取得・更新・削除しようとしているタスクが認証ユーザー自身のものかを確認し、
 他ユーザーのデータへアクセスできないようにしています。
 
-### 4. Docker multi-stage build
+### 5. Docker multi-stage build
 
 Docker の multi-stage build
 を利用し、開発環境と本番環境で必要な内容を分離しています。
 
-### 5. CI/CD
+### 6. CI/CD
 
-デプロイ前に Pytest と Alembic migration の upgrade → downgrade → upgrade を実行し、
-アプリケーションテストとDBスキーマ変更の検証に成功した変更だけを本番へ反映します。
-
-## 6.INDEXの導入
-
-DBのTaskテーブルにINDEXを導入しました。user_id, deadline, task_progressに対してそれぞれIndexを
-貼りましたが、本アプリの現在のクエリパターンではdeadline/progressの単独インデックスは利用されなかったことが
-テストの結果判明したのでuser_idのみにつけています。
-
-user_id(Indexあり)
-```
-tests/performance/test_task_fetch.py Bitmap Heap Scan on tasks  (cost=6.44..718.50 rows=277 width=194) (actual time=0.457..0.466 rows=100 loops=1)
-  Recheck Cond: (user_id = '7dcd1e74-fcaf-42aa-b52e-888d43f44851'::uuid)
-  Heap Blocks: exact=3
-  ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.448..0.449 rows=100 loops=1)
-        Index Cond: (user_id = '7dcd1e74-fcaf-42aa-b52e-888d43f44851'::uuid)
-Planning Time: 0.080 ms
-Execution Time: 0.495 ms
-```
-
-user_id(Indexなし)
-```
-tests/performance/test_task_fetch.py Seq Scan on tasks  (cost=0.00..2231.55 rows=277 width=194) (actual time=3.534..4.741 rows=100 loops=1)
-  Filter: (user_id = '774d80eb-a0c3-4046-89a8-f80beae00496'::uuid)
-  Rows Removed by Filter: 99900
-Planning Time: 0.076 ms
-Execution Time: 4.755 ms
-```
-
-task_progress(Indexあり)
-```
-tests/performance/test_task_arrange_p.py Sort  (cost=731.82..732.51 rows=277 width=198) (actual time=0.067..0.071 rows=100 loops=1)
-  Sort Key: (CASE task_progress WHEN 'TODO'::taskstatus THEN 1 WHEN 'IN_PROGRESS'::taskstatus THEN 2 WHEN 'DONE'::taskstatus THEN 3 ELSE NULL::integer END)
-  Sort Method: quicksort  Memory: 37kB
-  ->  Bitmap Heap Scan on tasks  (cost=6.44..720.58 rows=277 width=198) (actual time=0.028..0.041 rows=100 loops=1)
-        Recheck Cond: (user_id = '0158fc89-29d4-41d6-8399-4d36b62932ba'::uuid)
-        Heap Blocks: exact=3
-        ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.017..0.017 rows=100 loops=1)
-              Index Cond: (user_id = '0158fc89-29d4-41d6-8399-4d36b62932ba'::uuid)
-Planning Time: 0.146 ms
-Execution Time: 0.101 ms
-```
-
-deadline(Indexあり)
-```
-tests/performance/test_task_arrange_d.py Sort  (cost=729.74..730.43 rows=277 width=194) (actual time=0.045..0.048 rows=100 loops=1)
-  Sort Key: task_deadline
-  Sort Method: quicksort  Memory: 36kB
-  ->  Bitmap Heap Scan on tasks  (cost=6.44..718.50 rows=277 width=194) (actual time=0.023..0.032 rows=100 loops=1)
-        Recheck Cond: (user_id = '0b318d36-8159-4046-8256-eac7783ba193'::uuid)
-        Heap Blocks: exact=3
-        ->  Bitmap Index Scan on ix_tasks_user_id  (cost=0.00..6.37 rows=277 width=0) (actual time=0.017..0.017 rows=100 loops=1)
-              Index Cond: (user_id = '0b318d36-8159-4046-8256-eac7783ba193'::uuid)
-Planning Time: 0.107 ms
-Execution Time: 0.076 ms
-```
+100,000件のTaskデータを用いて EXPLAIN ANALYZE で検証した結果、
+user_id のIndexによって対象クエリの実行時間が約4.76msから約0.50msへ短縮されました。
+一方、deadline / task_progress は現在のクエリパターンではIndexが利用されなかったため、
+不要なIndexは追加しない設計としました。
 
 ------------------------------------------------------------------------
 
@@ -367,7 +368,6 @@ ECS Serviceの配置先をALBと同じAZに統一して解決しました。
 
 -   CloudFront / ALB 周辺のさらなるセキュリティ強化
 -   ログ・監視・アラートの強化
--   テストカバレッジの可視化
 -   フロントエンドのコンポーネント化・UI 改善
 
 ------------------------------------------------------------------------

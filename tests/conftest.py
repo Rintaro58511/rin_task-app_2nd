@@ -70,11 +70,13 @@ def override_get_mock_db():
 
 
 @pytest.fixture
-def override_get_current_user():
+def override_get_current_user(test_user):
     """単体テスト用にユーザログインの依存関係をAsyncMockへ差し替える"""
 
     async def override_user():
-        yield AsyncMock()
+        mock_user = AsyncMock()
+        mock_user.user_id = test_user.user_id
+        return mock_user
 
     app.dependency_overrides[user.get_current_user] = override_user
 
