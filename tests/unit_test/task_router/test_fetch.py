@@ -26,8 +26,9 @@ async def test_search_task(
 
     assert body["task_name"] == other_task.task_name
 
+
 @pytest.mark.anyio
-async def test_search_task(
+async def test_search_task_chenged_etag(
     monkeypatch,
     other_task,
     override_get_current_user,
@@ -50,6 +51,7 @@ async def test_search_task(
 
     assert first_response.status_code == status.HTTP_200_OK
     assert second_response.status_code == status.HTTP_304_NOT_MODIFIED
+
 
 @pytest.mark.anyio
 async def test_fail_fetch_task(

@@ -1,17 +1,20 @@
-import pytest
 import uuid
+
+import pytest
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
 from main import app
 from routers import tasks
 
+
 @pytest.mark.anyio
 async def test_update_task(
     monkeypatch,
     other_task,
     override_get_current_user,
-    override_get_mock_db,):
+    override_get_mock_db,
+):
 
     async def mock_fetch_task(task_id, user_id, db):
         return other_task
@@ -26,7 +29,7 @@ async def test_update_task(
             "task_progress": "IN_PROGRESS",
             "progress_ratio": 90,
             "progress_comment": "終わりそう",
-        }
+        },
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -35,12 +38,14 @@ async def test_update_task(
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["message"] == "タスクを更新しました"
 
+
 @pytest.mark.anyio
 async def test_update_none_task(
     monkeypatch,
     other_task,
     override_get_current_user,
-    override_get_mock_db,):
+    override_get_mock_db,
+):
 
     async def mock_fetch_task(task_id, user_id, db):
         return None
@@ -56,7 +61,7 @@ async def test_update_none_task(
             "task_progress": "IN_PROGRESS",
             "progress_ratio": 90,
             "progress_comment": "終わりそう",
-        }
+        },
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -65,12 +70,14 @@ async def test_update_none_task(
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "指定されたタスクが存在しません"
 
+
 @pytest.mark.anyio
 async def test_update_other_user(
     monkeypatch,
     other_task,
     override_get_current_user,
-    override_get_mock_db,):
+    override_get_mock_db,
+):
 
     other_task.user_id = uuid.uuid4()
 
@@ -87,7 +94,7 @@ async def test_update_other_user(
             "task_progress": "IN_PROGRESS",
             "progress_ratio": 90,
             "progress_comment": "終わりそう",
-        }
+        },
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -102,7 +109,8 @@ async def test_update_expired_task(
     monkeypatch,
     other_task,
     override_get_current_user,
-    override_get_mock_db,):
+    override_get_mock_db,
+):
 
     async def mock_fetch_task(task_id, user_id, db):
         return other_task
@@ -117,7 +125,7 @@ async def test_update_expired_task(
             "task_progress": "IN_PROGRESS",
             "progress_ratio": 90,
             "progress_comment": "終わりそう",
-        }
+        },
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -126,12 +134,14 @@ async def test_update_expired_task(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == "期限が過去の日付になっています"
 
+
 @pytest.mark.anyio
 async def test_updated_task(
     monkeypatch,
     other_task,
     override_get_current_user,
-    override_get_mock_db,):
+    override_get_mock_db,
+):
 
     async def mock_fetch_task(task_id, user_id, db):
         return other_task
@@ -146,7 +156,7 @@ async def test_updated_task(
             "task_progress": "IN_PROGRESS",
             "progress_ratio": 90,
             "progress_comment": "終わりそう",
-        }
+        },
     }
 
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

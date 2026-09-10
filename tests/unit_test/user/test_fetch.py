@@ -1,9 +1,9 @@
+import jwt
 import pytest
 from fastapi import HTTPException
-import jwt
 
-from routers.user import get_current_user  # 実際のパスに合わせて修正
-from routers.user import SECRET_KEY, ALGORITHM
+from routers.user import ALGORITHM, SECRET_KEY, get_current_user
+
 
 @pytest.mark.anyio
 async def test_get_current_user_success(monkeypatch, test_user, db_session):
@@ -29,6 +29,7 @@ async def test_get_current_user_success(monkeypatch, test_user, db_session):
 
     assert result == test_user
 
+
 @pytest.mark.anyio
 async def test_get_current_user_without_sub(db_session):
 
@@ -47,6 +48,7 @@ async def test_get_current_user_without_sub(db_session):
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "認証に失敗しました"
 
+
 @pytest.mark.anyio
 async def test_get_current_user_invalid_token(db_session):
 
@@ -60,6 +62,7 @@ async def test_get_current_user_invalid_token(db_session):
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "認証に失敗しました"
+
 
 @pytest.mark.anyio
 async def test_get_current_user_user_not_found(monkeypatch, db_session):
