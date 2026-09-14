@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date, timedelta
 from uuid import UUID
 
 from sqlalchemy import case, select
@@ -160,6 +160,30 @@ async def filter_tasks(search_name: str, user_id: UUID, db_session: AsyncSession
 
     """
     stmt = select(Task).where(Task.user_id == user_id, Task.task_name.like(f"%{search_name}%"))
+
+    result = await db_session.execute(stmt)
+
+    return list(result.scalars().all())
+
+async def fetch_deadline_tasks(
+        user_id: UUID, db_session: AsyncSession, target_date: date | None = None
+        ) -> list[Task]:
+    """
+    明日までに締め切りを迎えるタスクに絞り込む
+
+    Args
+        user_id(UUID): ログイン中のユーザーのID
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+        target_date(date): 対象の日付(基本今日)
+
+    Return
+        list[Task]: 締め切りで絞ったタスクのリスト
+    """
+    if target_date is None:
+        target_date = date.today()
+    
+    next_day = target_date + timedelta(days=1)
+    stmt = select(Task).where(Task.user_id == user_id, Task.task_deadline <= next_day)
 
     result = await db_session.execute(stmt)
 

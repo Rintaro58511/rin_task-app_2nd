@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers.subtasks import router as subtask_router
 from routers.tasks import router as task_router
 from routers.user import router as user_router
+from routers.emails import router as email_router
 
 app = FastAPI(
     title="タスク管理 & ユーザー認証 API",
@@ -25,7 +26,8 @@ app.add_middleware(
 
 app.include_router(user_router, tags=["User (ユーザー認証)"])
 app.include_router(task_router, tags=["Tasks (タスク管理)"])
-app.include_router(subtask_router, tags=["Tasks (サブタスク管理)"])
+app.include_router(subtask_router, tags=["SubTasks (サブタスク管理)"])
+app.include_router(email_router, tags=["Emails (メール管理)"])
 
 
 @app.get("/")

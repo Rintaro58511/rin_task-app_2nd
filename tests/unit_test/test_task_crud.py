@@ -12,6 +12,7 @@ from cruds.tasks import (
     filter_tasks,
     modify_task,
     remove_task,
+    fetch_deadline_tasks
 )
 from enums import TaskStatus
 from models.tasks import Task
@@ -278,6 +279,55 @@ async def test_filter_tasks():
     assert len(filtered_tasks) == 2
     assert filtered_tasks[0].task_name == "python"
     assert filtered_tasks[1].task_name == "python_test"
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.scalars.assert_called_once()
+    mock_scalars.all.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_fetch_deadline_tasks():
+    mock_db = AsyncMock()
+
+    user_id = uuid.uuid4()
+
+    task_1 = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_past",
+        task_deadline=date(2026, 9, 13),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_2 = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_next_day",
+        task_deadline=date(2026, 9, 15),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+    mock_scalars = MagicMock()
+    mock_results.scalars.return_value = mock_scalars
+
+    mock_scalars.all.return_value = [task_1, task_2]
+
+    dead_line_tasks = await fetch_deadline_tasks(user_id, mock_db, date(2026, 9, 14))
+
+    assert len(dead_line_tasks) == 2
+    assert dead_line_tasks[0].task_name == "test_past"
+    assert dead_line_tasks[1].task_name == "test_next_day"
 
     mock_db.execute.assert_awaited_once()
     mock_results.scalars.assert_called_once()
