@@ -1,44 +1,15 @@
-from enums import TaskStatus
-from models.tasks import Task
-import uuid
-from datetime import date, datetime
 from service.emails import create_email, send_email
 from unittest.mock import MagicMock
 import smtplib
 import service.emails
 
-def test_create_email(test_user):
+def test_create_email(test_user, task_list):
 
-    task_1 = Task(
-        task_id=uuid.uuid4(),
-        task_name="test_past",
-        task_deadline=date(2026, 9, 13),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 12),
-        user=test_user,
-        user_id=test_user.user_id,
-        task_progress=TaskStatus.DONE,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
-    task_2 = Task(
-        task_id=uuid.uuid4(),
-        task_name="test_next_day",
-        task_deadline=date(2026, 9, 15),
-        task_detail="コードのリファクタリング",
-        changed_time=datetime(2026, 7, 30, 11, 11, 11),
-        user=test_user,
-        user_id=test_user.user_id,
-        task_progress=TaskStatus.IN_PROGRESS,
-        progress_ratio=90,
-        progress_comment="終わりそう",
-    )
-
-    test_msg = create_email(test_user.user_name, test_user.email, [task_1, task_2])
+    test_msg = create_email(test_user.user_name, test_user.email, task_list)
 
     expect_body = "test_user_aさん\n\n締め切りが近いまたは過ぎているタスクがあります。\n\n"
         
-    for task in ([task_1, task_2]):
+    for task in (task_list):
 
         expect_body += (
             "------------------------------\n"
@@ -49,9 +20,10 @@ def test_create_email(test_user):
 
     body = test_msg.get_content()
 
-    assert task_1.task_name in body
-    assert task_2.task_name in body
-    assert task_1.task_detail in body
+    assert task_list[0].task_name in body
+    assert task_list[1].task_name in body
+    assert task_list[0].task_detail in body
+    assert task_list[1].task_detail in body
     assert test_msg['Subject'] == "test_user_aさん締め切りが近いまたは過ぎているタスクがあります。"
     assert test_msg['To'] == "test@user_a"
 
