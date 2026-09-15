@@ -1,18 +1,19 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+
 import db
 from cruds.tasks import fetch_deadline_tasks
 from routers.user import get_current_user
-from service.emails import create_and_send_email
 from schemas.tasks import ResponseSchema
-
+from service.emails import create_and_send_email
 
 router = APIRouter(prefix="/emails")
 
+
 @router.post("/alert_deadline")
 async def alert_deadline(
-        current_user=Depends(get_current_user),
-        db_session: AsyncSession = Depends(db.get_db_session),
+    current_user=Depends(get_current_user),
+    db_session: AsyncSession = Depends(db.get_db_session),
 ) -> ResponseSchema:
     """明日までに締め切りを迎えるタスクがある場合にメールを送信する"""
 

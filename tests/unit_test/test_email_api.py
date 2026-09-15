@@ -1,9 +1,9 @@
 import pytest
-from unittest.mock import AsyncMock
-from routers import emails
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
+
 from main import app
+from routers import emails
 
 
 @pytest.mark.asyncio

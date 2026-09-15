@@ -1,8 +1,9 @@
-from email.message import EmailMessage
+import asyncio
 import os
 import smtplib
 import ssl
-import asyncio
+from email.message import EmailMessage
+
 from models.tasks import Task
 
 SMTP_HOST = os.getenv("SMTP_HOST")
@@ -10,19 +11,17 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
-def create_email(
-        user_name: str, user_email: str, tasks: list[Task]
-) -> EmailMessage:
+
+def create_email(user_name: str, user_email: str, tasks: list[Task]) -> EmailMessage:
 
     msg = EmailMessage()
-    msg['Subject'] = f"{user_name}さん締め切りが近いまたは過ぎているタスクがあります。"
+    msg["Subject"] = f"{user_name}さん締め切りが近いまたは過ぎているタスクがあります。"
 
     body = f"{user_name}さん\n\n締め切りが近いまたは過ぎているタスクがあります。\n\n"
-    
-    for task in (tasks):
 
+    for task in tasks:
         body += (
-            "------------------------------\n"
+            "----------------------------------------\n"
             f"タスク名：{task.task_name}\n"
             f"タスク詳細：{task.task_detail}\n"
             f"進捗率：{task.progress_ratio}\n"
@@ -30,10 +29,11 @@ def create_email(
 
     msg.set_content(body)
 
-    msg['From'] = SMTP_USER
-    msg['To'] = user_email
+    msg["From"] = SMTP_USER
+    msg["To"] = user_email
 
     return msg
+
 
 def send_email(msg: EmailMessage) -> None:
 
@@ -44,8 +44,11 @@ def send_email(msg: EmailMessage) -> None:
         smtp.login(SMTP_USER, SMTP_PASSWORD)
         smtp.send_message(msg)
 
+
 async def create_and_send_email(
-    user_name: str, user_email: str, tasks: list[Task],
+    user_name: str,
+    user_email: str,
+    tasks: list[Task],
 ) -> None:
 
     msg = create_email(user_name, user_email, tasks)

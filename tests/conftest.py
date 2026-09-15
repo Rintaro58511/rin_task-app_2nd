@@ -299,8 +299,8 @@ def other_task(test_user):
     expeted_task = Task(
         task_id=uuid.uuid4(),
         user_id=test_user.user_id,
-        task_name="test_task",
-        task_deadline=date(2026, 9, 19),
+        task_name="test_other_task",
+        task_deadline=date(2026, 9, 14),
         task_detail=None,
         changed_time=datetime(2026, 8, 16, tzinfo=timezone.utc),
         task_progress=TaskStatus.TODO,
@@ -309,25 +309,26 @@ def other_task(test_user):
     )
     return expeted_task
 
+
 @pytest.fixture
 def task_list(test_user):
     task_1 = Task(
-            task_id=uuid.uuid4(),
-            task_name="test_past",
-            task_deadline=date(2026, 9, 13),
-            task_detail="コードのリファクタリング",
-            changed_time=datetime(2026, 7, 30, 11, 11, 12),
-            user=test_user,
-            user_id=test_user.user_id,
-            task_progress=TaskStatus.DONE,
-            progress_ratio=90,
-            progress_comment="終わりそう",
-        )
+        task_id=uuid.uuid4(),
+        task_name="test_past",
+        task_deadline=date(2026, 9, 13),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=test_user,
+        user_id=test_user.user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
     task_2 = Task(
         task_id=uuid.uuid4(),
         task_name="test_next_day",
         task_deadline=date(2026, 9, 15),
-        task_detail="コードのリファクタリング",
+        task_detail="コードのリファクタリング2",
         changed_time=datetime(2026, 7, 30, 11, 11, 11),
         user=test_user,
         user_id=test_user.user_id,

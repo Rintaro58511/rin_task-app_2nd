@@ -3,10 +3,10 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from routers.emails import router as email_router
 from routers.subtasks import router as subtask_router
 from routers.tasks import router as task_router
 from routers.user import router as user_router
-from routers.emails import router as email_router
 
 app = FastAPI(
     title="タスク管理 & ユーザー認証 API",

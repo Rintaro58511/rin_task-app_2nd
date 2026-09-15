@@ -7,12 +7,12 @@ import pytest
 from cruds.tasks import (
     add_task,
     arrange_tasks,
+    fetch_deadline_tasks,
     fetch_task,
     fetch_tasks,
     filter_tasks,
     modify_task,
     remove_task,
-    fetch_deadline_tasks
 )
 from enums import TaskStatus
 from models.tasks import Task
