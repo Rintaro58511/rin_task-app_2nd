@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.user import User
+from models.tasks import Task
 from schemas.user import UserInDB
 
 password_hash = PasswordHash.recommended()

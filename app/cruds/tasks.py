@@ -1,10 +1,12 @@
 from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 from uuid import UUID
 
 from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.tasks import Task
+from models.user import User
 from schemas.tasks import UpdateAndCreateTaskSchema
 
 
@@ -189,3 +191,26 @@ async def fetch_deadline_tasks(
     result = await db_session.execute(stmt)
 
     return list(result.scalars().all())
+
+async def fetch_all_deadline_tasks(
+        db_session: AsyncSession, target_date: date | None = None
+) -> list[tuple[Task, User]]:
+    """
+    明日までに締め切りを迎えるタスクに絞り込む(全てのユーザー)
+
+    Args
+        db_session(AsyncSession): データベースの接続動作の依存性注入
+        target_date(date): 対象の日付(基本今日)
+
+    Return
+        list[tuple[Task, User]]: 締め切り対象のタスクと所有ユーザーのリスト
+    """
+    if target_date is None:
+            target_date = datetime.now(ZoneInfo("Asia/Tokyo")).date()
+
+    next_day = target_date + timedelta(days=1)
+    stmt = select(Task, User).join(User, Task.user_id == User.user_id).where(Task.task_deadline <= next_day)
+
+    result = await db_session.execute(stmt)
+
+    return list(result.all())
