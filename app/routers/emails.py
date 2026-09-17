@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import db
-from cruds.tasks import fetch_deadline_tasks, fetch_all_deadline_tasks, group_tasks_by_user
+from cruds.tasks import fetch_deadline_tasks
 from routers.user import get_current_user
 from schemas.tasks import ResponseSchema
 from service.emails import create_and_send_email

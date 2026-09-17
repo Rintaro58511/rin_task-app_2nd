@@ -1,8 +1,9 @@
+from datetime import date
 import smtplib
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, AsyncMock
 
 import service.emails
-from service.emails import create_email, send_email
+from service.emails import create_email, send_email, group_tasks_by_user
 
 
 def test_create_email(test_user, task_list):
@@ -36,3 +37,15 @@ def test_send_email(monkeypatch):
     mock_smtp_instance.starttls.assert_called_once()
     mock_smtp_instance.login.assert_called_once_with("test_user", "test_password")
     mock_smtp_instance.send_message.assert_called_once_with(mock_msg)
+
+def test_group_tasks_by_user(test_user, test_other_user, task_list, task_list2):
+
+    result = group_tasks_by_user([
+        (task_list[0], test_user),
+        (task_list[1], test_user),
+        (task_list2[0], test_other_user),
+        (task_list2[1], test_other_user),
+    ])
+
+    assert result[test_user.user_id]["tasks"] == task_list
+    assert result[test_other_user.user_id]["tasks"] == task_list2

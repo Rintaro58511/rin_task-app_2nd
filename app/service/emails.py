@@ -1,16 +1,14 @@
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 import asyncio
 import os
 import smtplib
 import ssl
 from email.message import EmailMessage
-import db
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from cruds.tasks import fetch_all_deadline_tasks
 from models.tasks import Task
 from models.user import User
-from cruds.tasks import fetch_all_deadline_tasks, group_tasks_by_user
-from schemas.tasks import ResponseSchema
-
 
 SMTP_HOST = os.getenv("SMTP_HOST")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
@@ -61,13 +59,17 @@ async def create_and_send_email(
 
     await asyncio.to_thread(send_email, msg)
 
-def group_tasks_by_user(all_deadline_tasks: list[tuple[Task, User]]):
+
+def group_tasks_by_user(all_deadline_tasks: list[tuple[Task, User]]) -> dict:
+    "明日までに締め切りのタスクをuserごとのtaskでグループに分ける"
     user_tasks = dict()
-    for (task, user) in all_deadline_tasks:
+    for task, user in all_deadline_tasks:
         if user.user_id not in user_tasks:
-            user_tasks[user.user_id] = { "user": user, "tasks": [task] }
-        else: user_tasks[user.user_id]["tasks"].append(task)
+            user_tasks[user.user_id] = {"user": user, "tasks": [task]}
+        else:
+            user_tasks[user.user_id]["tasks"].append(task)
     return user_tasks
+
 
 async def send_deadline_notifications(
     db_session: AsyncSession,

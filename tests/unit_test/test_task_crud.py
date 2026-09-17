@@ -13,6 +13,7 @@ from cruds.tasks import (
     filter_tasks,
     modify_task,
     remove_task,
+    fetch_all_deadline_tasks
 )
 from enums import TaskStatus
 from models.tasks import Task
@@ -332,3 +333,28 @@ async def test_fetch_deadline_tasks():
     mock_db.execute.assert_awaited_once()
     mock_results.scalars.assert_called_once()
     mock_scalars.all.assert_called_once()
+
+@pytest.mark.asyncio
+async def test_fetch_all_deadline_tasks(test_user, test_other_user, task_list, task_list2):
+    mock_db = AsyncMock()
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+
+    mock_results.all.return_value = [
+        (task_list[0], test_user),
+        (task_list[1], test_user),
+        (task_list2[0], test_other_user),
+        (task_list2[1], test_other_user),
+    ]
+
+    dead_line_tasks = await fetch_all_deadline_tasks(mock_db)
+
+    assert len(dead_line_tasks) == 4
+    assert dead_line_tasks[0][0] == task_list[0]
+    assert dead_line_tasks[2][0] == task_list2[0]
+    assert dead_line_tasks[0][1] == test_user
+    assert dead_line_tasks[2][1] == test_other_user
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.all.assert_called_once()
