@@ -338,6 +338,7 @@ def task_list(test_user):
     )
     return [task_1, task_2]
 
+
 @pytest.fixture
 def task_list2(test_other_user):
     task_1 = Task(

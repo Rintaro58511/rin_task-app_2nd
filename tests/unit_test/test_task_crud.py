@@ -7,13 +7,13 @@ import pytest
 from cruds.tasks import (
     add_task,
     arrange_tasks,
+    fetch_all_deadline_tasks,
     fetch_deadline_tasks,
     fetch_task,
     fetch_tasks,
     filter_tasks,
     modify_task,
     remove_task,
-    fetch_all_deadline_tasks
 )
 from enums import TaskStatus
 from models.tasks import Task
@@ -333,6 +333,7 @@ async def test_fetch_deadline_tasks():
     mock_db.execute.assert_awaited_once()
     mock_results.scalars.assert_called_once()
     mock_scalars.all.assert_called_once()
+
 
 @pytest.mark.asyncio
 async def test_fetch_all_deadline_tasks(test_user, test_other_user, task_list, task_list2):
