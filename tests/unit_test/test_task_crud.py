@@ -7,6 +7,8 @@ import pytest
 from cruds.tasks import (
     add_task,
     arrange_tasks,
+    fetch_all_deadline_tasks,
+    fetch_deadline_tasks,
     fetch_task,
     fetch_tasks,
     filter_tasks,
@@ -282,3 +284,78 @@ async def test_filter_tasks():
     mock_db.execute.assert_awaited_once()
     mock_results.scalars.assert_called_once()
     mock_scalars.all.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_fetch_deadline_tasks():
+    mock_db = AsyncMock()
+
+    user_id = uuid.uuid4()
+
+    task_1 = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_past",
+        task_deadline=date(2026, 9, 13),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 12),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.DONE,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+    task_2 = Task(
+        task_id=uuid.uuid4(),
+        task_name="test_next_day",
+        task_deadline=date(2026, 9, 15),
+        task_detail="コードのリファクタリング",
+        changed_time=datetime(2026, 7, 30, 11, 11, 11),
+        user=None,
+        user_id=user_id,
+        task_progress=TaskStatus.IN_PROGRESS,
+        progress_ratio=90,
+        progress_comment="終わりそう",
+    )
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+    mock_scalars = MagicMock()
+    mock_results.scalars.return_value = mock_scalars
+
+    mock_scalars.all.return_value = [task_1, task_2]
+
+    dead_line_tasks = await fetch_deadline_tasks(user_id, mock_db, date(2026, 9, 14))
+
+    assert len(dead_line_tasks) == 2
+    assert dead_line_tasks[0].task_name == "test_past"
+    assert dead_line_tasks[1].task_name == "test_next_day"
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.scalars.assert_called_once()
+    mock_scalars.all.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_deadline_tasks(test_user, test_other_user, task_list, task_list2):
+    mock_db = AsyncMock()
+
+    mock_results = MagicMock()
+    mock_db.execute.return_value = mock_results
+
+    mock_results.all.return_value = [
+        (task_list[0], test_user),
+        (task_list[1], test_user),
+        (task_list2[0], test_other_user),
+        (task_list2[1], test_other_user),
+    ]
+
+    dead_line_tasks = await fetch_all_deadline_tasks(mock_db)
+
+    assert len(dead_line_tasks) == 4
+    assert dead_line_tasks[0][0] == task_list[0]
+    assert dead_line_tasks[2][0] == task_list2[0]
+    assert dead_line_tasks[0][1] == test_user
+    assert dead_line_tasks[2][1] == test_other_user
+
+    mock_db.execute.assert_awaited_once()
+    mock_results.all.assert_called_once()

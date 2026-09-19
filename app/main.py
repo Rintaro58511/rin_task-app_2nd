@@ -25,7 +25,7 @@ app.add_middleware(
 
 app.include_router(user_router, tags=["User (ユーザー認証)"])
 app.include_router(task_router, tags=["Tasks (タスク管理)"])
-app.include_router(subtask_router, tags=["Tasks (サブタスク管理)"])
+app.include_router(subtask_router, tags=["SubTasks (サブタスク管理)"])
 
 
 @app.get("/")
